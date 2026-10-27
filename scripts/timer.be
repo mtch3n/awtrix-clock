@@ -1,5 +1,5 @@
 # @name    Timer
-# @desc    Countdown, Pomodoro and stopwatch. Push to start or pause, turn to set, hold to reset, hold again to change the mode
+# @desc    Countdown, Pomodoro and stopwatch. Select starts, push switches minutes and seconds or pauses, turn to set, hold to reset, hold again to change the mode
 # @display 52x16
 # @config  mode   select "Start mode" default=countdown options=countdown,pomodoro,stopwatch
 # @config  start  number "Countdown" default=5 min=1 max=180 unit=min group="Countdown"
@@ -27,7 +27,7 @@ var DARK = 0x3A2E26
 var AMBER = 0xE0A040
 
 class Timer
-  var mode, set_s, end_ms, left_ms, started_ms, elapsed_ms, ringing, ring_until, last_tone, phase, round
+  var mode, set_s, end_ms, left_ms, started_ms, elapsed_ms, ringing, ring_until, last_tone, phase, round, field
 
   def init()
     self.mode = store.get("mode", "countdown")
@@ -44,6 +44,7 @@ class Timer
     self.elapsed_ms = 0
     self.phase = "work"
     self.round = 1
+    self.field = "min"
     self.set_s = self.mode == "pomodoro" ? store.get("work", 25) * 60 : store.get("start", 5) * 60
   end
 
@@ -141,7 +142,10 @@ class Timer
       self.stop_ring()
       return true
     end
-    if event == "press"
+    var editing = self.mode == "countdown" && !self.running() && self.left_ms == 0
+    if event == "press" && editing
+      self.field = self.field == "min" ? "sec" : "min"
+    elif event == "press"
       self.toggle()
     elif event == "long"
       if self.is_reset()
@@ -149,10 +153,14 @@ class Timer
         store.set("mode", self.mode)
       end
       self.reset()
+    elif (event == "left" || event == "right") && editing && self.field == "sec"
+      var m = self.set_s / 60
+      var sec = (self.set_s % 60 + (event == "right" ? 1 : 59)) % 60
+      self.set_s = max(m * 60 + sec, 5)
     elif (event == "left" || event == "right") && !self.running() && self.mode != "stopwatch"
       var step = self.mode == "pomodoro" ? 60 : store.get("step", 1) * 60
       var base = self.left_ms > 0 ? (self.left_ms + 999) / 1000 : self.set_s
-      self.set_s = min(max(base + (event == "right" ? step : -step), 60), 180 * 60)
+      self.set_s = min(max(base + (event == "right" ? step : -step), self.mode == "pomodoro" ? 60 : 5), 180 * 60)
       self.left_ms = 0
     end
     return true
@@ -221,11 +229,18 @@ class Timer
       c = (t / 300) % 2 == 0 ? AMBER : DARK
       label = "00:00"
     end
-    var w = blockfont.width(label)
+    var w = blockfont.width(label, 6, 1)
     var x = width() - w - 1
     var paused = !self.running() && (self.left_ms > 0 || self.elapsed_ms > 0)
-    blockfont.text(label, x, 1, c, 2, !paused || (t / 500) % 2 == 0)
+    blockfont.text(label, x, 1, c, 2, !paused || (t / 500) % 2 == 0, 6, 14, 1)
     if progress >= 0 rect_fill(x, 15, progress * w / 100, 1, BROWN) end
+    if self.mode == "countdown" && !self.running() && self.left_ms == 0 && !self.ringing && size(label) == 5
+      rect_fill(self.field == "min" ? x : x + 16, 15, 13, 1, (t / 400) % 3 == 0 ? DARK : 0xF2D7B6)
+    end
+    var cur = MODES.find(self.mode)
+    for i : 0 .. 2
+      pixel(width() - 10 + i * 2, 0, i == cur ? 0xF2D7B6 : DARK)
+    end
   end
 end
 

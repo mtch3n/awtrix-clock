@@ -258,7 +258,7 @@ class GoogleCalendar
       self.left_label = "in " + self.span(wait)
       self.left_color = wait <= 300 ? 0xE0A040 : 0xF2D7B6
     else
-      self.left_label = str(self.idx + 1) + "/" + str(size(list))
+      self.left_label = str(self.idx + 1) + "|" + str(size(list))
       self.left_color = 0x8C7B6B
     end
   end

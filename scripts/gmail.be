@@ -120,10 +120,12 @@ class Gmail
 
   def draw()
     clear()
-    var c = self.unread > 0 ? 0xC8643C : 0x3A2E26
-    rect(0, 0, 9, 7, c)
-    line(1, 1, 4, 4, c)
-    line(7, 1, 4, 4, c)
+    rect_fill(0, 1, 1, 6, 0x4285F4)
+    rect_fill(8, 1, 1, 6, 0x34A853)
+    pixel(0, 0, 0xC5221F)
+    pixel(8, 0, 0xFBBC04)
+    line(1, 1, 4, 4, 0xEA4335)
+    line(7, 1, 4, 4, 0xEA4335)
     text(11, 6, self.top, 0xF2D7B6)
     scroll_text(0, 14, width(), self.bottom, 0xC8643C)
   end

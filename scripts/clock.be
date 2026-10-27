@@ -3,6 +3,8 @@
 # @display 52x16
 # @config  layout  select "Layout" default=weather options=weather,hm,hms help="weather: weather left and HH:MM. hm: HH:MM only. hms: HH:MM:SS" group="Layout"
 # @config  left    select "Left side" default=icon options=icon,both,temp help="Only for the weather layout" group="Layout"
+# @config  size    select "Digit size" default=medium options=large,medium,small help="large 6x14, medium 5x12, small 5x10" group="Digits"
+# @config  spacing select "Spacing" default=airy options=airy,tight group="Digits"
 # @config  stroke  select "Digit weight" default=bold options=bold,thin group="Digits"
 # @config  hours   select "Hours" default=auto options=auto,24,12 help="auto follows the clock's 24-hour setting" group="Digits"
 # @config  zero    bool   "Leading zero" default=true group="Digits"
@@ -154,16 +156,26 @@ class Clock
     end
   end
 
+  def dims()
+    var size = store.get("size", "medium")
+    var h = size == "large" ? 14 : (size == "small" ? 10 : 12)
+    var w = size == "large" ? 6 : 5
+    var gap = store.get("spacing", "airy") == "airy" ? 2 : 1
+    return [w, h, gap]
+  end
+
   def draw_time(t)
     var layout = store.get("layout", "weather")
     var s = store.get("stroke", "bold") == "bold" ? 2 : 1
+    var dm = self.dims()
     var c = store.get("color", 0xF2D7B6)
     var colon = store.get("colon", "steady") == "steady" || second() % 2 == 0
     var str_t = self.hour_text() + ":" + format("%02d", minute())
     if layout == "hms" str_t += ":" + format("%02d", second()) end
-    var w = blockfont.width(str_t)
-    var x = layout == "weather" ? width() - w - 1 : (width() - w) / 2
-    blockfont.text(str_t, x, 1, c, s, colon)
+    var w = blockfont.width(str_t, dm[0], dm[2])
+    var x = layout == "weather" ? width() - w - 2 : (width() - w) / 2
+    var y = (16 - dm[1]) / 2
+    blockfont.text(str_t, x, y, c, s, colon, dm[0], dm[1], dm[2])
     if store.get("bar", true) self.weekday_bar(x, w) end
     if store.get("secbar", false) rect_fill(x, 0, second() * w / 59, 1, store.get("sec", 0x8C7B6B)) end
     if layout == "weather"
@@ -184,7 +196,8 @@ class Clock
   def draw_date()
     var c = store.get("color", 0xF2D7B6)
     var d = format("%02d", day())
-    blockfont.text(d, 3, 1, c, store.get("stroke", "bold") == "bold" ? 2 : 1, true)
+    var dm = self.dims()
+    blockfont.text(d, 3, (16 - dm[1]) / 2, c, store.get("stroke", "bold") == "bold" ? 2 : 1, true, dm[0], dm[1], dm[2])
     text(22, 7, DAYS[weekday()], store.get("today", 0xC8643C))
     text(22, 15, MONTHS[month() - 1] + " " + str(year() % 100), c)
   end
@@ -209,6 +222,13 @@ class Clock
     scroll_text(0, 15, width(), shared.get("Sky.alert", ""), col)
   end
 
+  def knob_dots(cur, n)
+    var x0 = width() - 4 - n * 2
+    for i : 0 .. n - 1
+      pixel(x0 + i * 2, 0, i == cur ? 0xF2D7B6 : 0x3A2E26)
+    end
+  end
+
   def draw()
     clear()
     var t = now_ms()
@@ -222,6 +242,7 @@ class Clock
     elif self.page == 3 self.draw_alert(t)
     else self.draw_time(t)
     end
+    self.knob_dots(self.page, self.pages())
     var ov = shared.get("Sky.overlay")
     if store.get("overlay", true) && ov != nil overlay(ov) end
   end

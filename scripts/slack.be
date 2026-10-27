@@ -12,7 +12,7 @@ var LIST_EVERY = 1800
 
 class Slack
   var ids, idx, state, me, names, unread, latest, seen_ts, baseline, list_ticks, wait, busy, status, top, bottom
-  var dms, mentions, mq, mpos, mread, mcount, mdone
+  var dms, mentions, mq, mpos, mread, mcount, mdone, turn
 
   def init()
     self.ids = nil
@@ -37,6 +37,7 @@ class Slack
     self.mread = {}
     self.mcount = 0
     self.mdone = false
+    self.turn = 0
   end
 
   def opts()
@@ -75,7 +76,17 @@ class Slack
       self.mention_step()
     elif size(self.ids) > 0
       self.busy = true
+      self.turn += 1
       var id = self.ids[self.idx]
+      var hot = []
+      for k : self.state.keys()
+        if self.state[k] > 0 hot.push(k) end
+      end
+      if self.turn % 3 == 0 && size(hot) > 0
+        id = hot[(self.turn / 3) % size(hot)]
+        http.get(API + "conversations.info?channel=" + id, / b, st -> self.on_hot(id, b, st), self.opts())
+        return
+      end
       http.get(API + "conversations.info?channel=" + id, / b, st -> self.on_info(id, b, st), self.opts())
     end
   end
@@ -97,6 +108,12 @@ class Slack
     self.ids = ids
     self.list_ticks = LIST_EVERY
     if self.idx >= size(ids) self.idx = 0 end
+  end
+
+  def on_hot(id, body, status)
+    var keep = self.idx
+    self.on_info(id, body, status)
+    self.idx = keep
   end
 
   def next()
