@@ -32,12 +32,14 @@ var BLUE = 0x6FA8DC
 var PINK = 0xE06A6A
 var GREEN = 0x6FAF6A
 var BOUNCE = [0, 2, 3, 2, 0]
+var GLANCE = [0, 0, -1, 0, 0, 1, 0, -1]
 var ACTS = ["laptop", "coffee", "book", "music", "exercise", "ball", "dance", "plant", "hello"]
 
 class Pet
   var x, target, rest_until, last_step, moving, hearts_until, mood, popped
   var wx, wx_ticks, news, seen
   var act, act_start, act_until, ball_x, ball_dx, ball_t, last_visit, idle_since, eat_until, away_until
+  var hide, hide_until, pending_hide, yoff, yoff_target, yoff_t, look, say, say_until, duck_until, jump_until, hang
 
   def init()
     self.x = 17
@@ -61,6 +63,18 @@ class Pet
     self.idle_since = now_ms()
     self.eat_until = 0
     self.away_until = 0
+    self.hide = nil
+    self.hide_until = 0
+    self.pending_hide = nil
+    self.yoff = 0
+    self.yoff_target = 0
+    self.yoff_t = 0
+    self.look = 0
+    self.say = nil
+    self.say_until = 0
+    self.duck_until = 0
+    self.jump_until = 0
+    self.hang = 11
   end
 
   def setup()
@@ -214,7 +228,51 @@ class Pet
     if self.away_until > now_ms() + 1500 self.away_until = now_ms() + 1500 end
   end
 
+  def end_hide()
+    if self.hide == "top"
+      self.yoff = -16
+      self.target = self.x
+    end
+    self.hide = nil
+    self.pending_hide = nil
+    self.yoff_target = 0
+    self.duck_until = 0
+  end
+
+  def talk(words, ms)
+    self.say = words
+    self.say_until = now_ms() + ms
+  end
+
+  def seek(event)
+    var t = now_ms()
+    if event == "press"
+      self.duck_until = t + 1500
+      self.hide_until = max(self.hide_until, t + 4000)
+      return
+    end
+    if event != "left" && event != "right" return end
+    var hit = self.hide != "side" || (event == "left") == (self.x < 0)
+    if hit
+      store.set("found", store.get("found", 0) + 1)
+      self.talk("found! " + str(store.get("found")), 2500)
+      self.end_hide()
+      self.target = min(max(self.x, 0), width() - 18)
+      self.x = self.target
+      self.hearts_until = t + 2500
+      self.jump_until = t + 700
+      self.rest_until = t + 5000
+    else
+      self.talk("hehe", 1500)
+      self.hide_until = max(self.hide_until, t + 3000)
+    end
+  end
+
   def on_knob(event)
+    if self.hide != nil
+      self.seek(event)
+      return true
+    end
     if event == "left"
       self.x = max(self.x - 3, 0)
     elif event == "right"
@@ -245,7 +303,18 @@ class Pet
   end
 
   def walk(t, fast)
-    var called = self.mood != "idle" || self.act != nil || fast
+    var called = self.mood != "idle" || self.act != nil || fast || self.news != nil
+    if self.hide != nil
+      if called || t >= self.hide_until
+        var side = self.hide == "side"
+        self.end_hide()
+        if side self.target = min(max(self.x, 2), width() - 20) end
+        self.rest_until = called ? 0 : t + 1500
+      else
+        self.moving = false
+        return
+      end
+    end
     if self.news == nil && called && (self.x < 0 || self.x > width() - 18)
       self.target = self.x < 0 ? 2 : width() - 20
       self.away_until = 0
@@ -271,14 +340,49 @@ class Pet
         self.away_until = 0
         var left = math.rand() % 2 == 0
         self.x = left ? -18 : width()
-        self.target = math.rand() % 3 == 0 ? (left ? -9 : width() - 9) : math.rand() % (width() - 17)
+        var how = math.rand() % 3
+        if how == 2 && self.mood == "idle"
+          self.x = math.rand() % (width() - 17)
+          self.target = self.x
+          self.hide = "top"
+          self.hang = 11
+          self.hide_until = t + 6000 + math.rand() % 10000
+          return
+        end
+        if how == 0
+          self.target = left ? -9 : width() - 9
+          self.pending_hide = "side"
+        else
+          self.target = math.rand() % (width() - 17)
+        end
         self.rest_until = t + 2500
       end
       return
     end
     if self.x == self.target
+      if self.news == nil && self.act == nil && self.pending_hide != nil
+        self.hide = self.pending_hide
+        self.pending_hide = nil
+        self.hide_until = t + 6000 + math.rand() % 10000
+        self.moving = false
+        return
+      end
       if self.news == nil && self.act == nil
-        self.target = math.rand() % 7 == 0 ? (math.rand() % 2 == 0 ? -18 : width()) : math.rand() % (width() - 17)
+        var pick = math.rand() % 9
+        if pick == 0
+          self.target = math.rand() % 2 == 0 ? -18 : width()
+        elif pick == 1
+          self.target = math.rand() % 2 == 0 ? -9 : width() - 9
+          self.pending_hide = "side"
+        elif pick == 2 && self.mood == "idle"
+          self.hide = "under"
+          self.yoff_target = 6
+          self.hide_until = t + 6000 + math.rand() % 10000
+          self.moving = false
+          return
+        else
+          self.target = math.rand() % (width() - 17)
+        end
         self.rest_until = t + 2000 + math.rand() % 5000
         if t - self.idle_since > 15000 && self.mood == "idle" && math.rand() % 3 == 0
           self.start_act(self.pick_act())
@@ -296,29 +400,34 @@ class Pet
 
   def sprite(x, y, c, t, eyes_closed, wave)
     var r = 0
+    var flip = self.hide == "top"
+    var blink = (t % 4200) < 150
     for spans : BODY
-      if (r == 2 || r == 3) && (eyes_closed || (t % 4200) < 150)
-        if !(eyes_closed && r == 3)
-          rect_fill(x + 3, y + r, 12, 1, c)
-          r += 1
-          continue
+      var ry = flip ? y + 9 - r : y + r
+      if r == 2 || r == 3
+        rect_fill(x + 3, ry, 12, 1, c)
+        if !blink && (!eyes_closed || r == 3)
+          pixel(x + 5 + self.look, ry, 0)
+          pixel(x + 12 + self.look, ry, 0)
         end
+        r += 1
+        continue
       end
       for s : spans
         var a = s[0]
         var b = s[1]
-        if wave && (r == 4 || r == 5) b = 14 end
-        rect_fill(x + a, y + r, b - a + 1, 1, c)
+        if wave && !flip && (r == 4 || r == 5) b = 14 end
+        rect_fill(flip ? x + 17 - b : x + a, ry, b - a + 1, 1, c)
       end
       r += 1
     end
-    if wave
+    if wave && !flip
       var up = (t / 400) % 2 == 0 ? 0 : 1
       rect_fill(x + 15, y + 2 + up, 2, 2, c)
     end
     var legs = self.moving && (t / 260) % 2 == 1 ? LEGS_B : LEGS_A
     for lx : legs
-      rect_fill(x + lx, y + 8, 1, 2, c)
+      rect_fill(flip ? x + 17 - lx : x + lx, flip ? y : y + 8, 1, 2, c)
     end
   end
 
@@ -487,6 +596,8 @@ class Pet
     self.walk(t, soon && !night)
     var y = 6
     if night
+      if self.hide != nil self.end_hide() end
+      self.yoff = 0
       if self.offscreen() || self.x < 0 || self.x > width() - 18
         self.x = 17
         self.target = 17
@@ -500,6 +611,31 @@ class Pet
     var kind = self.wx_kind()
     self.weather_back(kind, t)
     var x = self.x
+    if self.hide == "top"
+      var want = t < self.duck_until ? 11 : 4
+      if self.hang != want && t - self.yoff_t >= 70
+        self.yoff_t = t
+        self.hang += want > self.hang ? 1 : -1
+      end
+      self.look = GLANCE[(t / 700) % size(GLANCE)]
+      self.sprite(x, -self.hang, store.get("color", 0xD77757), t, false, false)
+      if self.say != nil && t < self.say_until text(min(max(x, 0), width() - text_width(self.say)), 14, self.say, 0xF2D7B6) end
+      return
+    end
+    var goal = t < self.duck_until ? 11 : self.yoff_target
+    if self.yoff != goal && t - self.yoff_t >= 70
+      self.yoff_t = t
+      self.yoff += goal > self.yoff ? 1 : -1
+    end
+    if self.moving
+      self.look = self.target > self.x ? 1 : -1
+    elif self.hide == "side"
+      self.look = self.x < 0 ? 1 : -1
+    elif self.act == "ball"
+      self.look = self.ball_x > self.x + 8 ? 1 : -1
+    else
+      self.look = GLANCE[(t / (self.hide == "under" ? 700 : 1300)) % size(GLANCE)]
+    end
     var act = self.news == nil ? self.act : nil
     if act == nil && self.news == nil && self.mood == "working" act = "laptop" end
     if (kind == "cold" || kind == "snow") && !self.moving && act == nil x += (t / 90) % 2 end
@@ -516,11 +652,20 @@ class Pet
       self.bitmap(HEART, x + 6, 0, PINK)
     end
     if act == "dance" x += ((t / 250) % 2) * 2 - 1 end
+    y += self.yoff
+    if t < self.jump_until y -= 2 end
+    if self.say != nil
+      if t < self.say_until
+        text(min(max(x, 0), width() - text_width(self.say)), 6, self.say, 0xF2D7B6)
+      else
+        self.say = nil
+      end
+    end
     self.sprite(x, y, c, t, eyes_closed, wave)
     if act == "exercise" self.arms_up(x, y, c, (t / 300) % 2 == 0, (t / 300) % 2 == 0)
     elif act == "dance" self.arms_up(x, y, c, (t / 250) % 2 == 0, (t / 250) % 2 == 1)
     end
-    if self.news == nil || kind != "rain"
+    if (self.news == nil || kind != "rain") && self.yoff < 3
       if !(act == "music" && kind == "rain") self.weather_front(kind, x, y, t) end
     end
     if self.news != nil
@@ -561,7 +706,7 @@ class Pet
       rect_fill(x + 19, 6, 1, 5, AMBER)
       pixel(x + 19, 12, AMBER)
     end
-    if act == nil && self.hungry() && (t / 4000) % 3 == 0
+    if act == nil && self.hide == nil && self.say == nil && self.hungry() && (t / 4000) % 3 == 0
       pixel(x + 16, y - 1, CREAM)
       pixel(x + 18, y - 3, CREAM)
       rect(x + 19, 0, 7, 6, CREAM)
