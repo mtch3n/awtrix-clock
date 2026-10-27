@@ -1,7 +1,17 @@
 {
+  "Clock": {
+    "secs": true,
+    "blink": false,
+    "bar": true,
+    "color": 15914934,
+    "today": 13132860,
+    "other": 3812902
+  },
   "Pet": {
+    "visit": 15,
     "pop": true,
     "news": true,
+    "hungry": 6,
     "lat": 43.6532,
     "lon": -79.3832,
     "color": 14120791
@@ -65,13 +75,17 @@
   },
   "Calm": {
     "back": 60,
-    "home": "Time",
+    "home": "Clock",
     "keep": "Pomodoro-Timer",
     "night": true,
     "nfrom": "22:30",
     "nto": "07:00",
     "nmode": "dim",
     "nbright": 8,
+    "bsave": true,
+    "bcap": 40,
+    "bwarn": 20,
+    "boff": 10,
     "inds": true,
     "user": "admin"
   }

@@ -8,8 +8,9 @@ palette ("Warm paper") is used for all apps. A small Clawd-style pet brings the 
 
 | Script | What it shows |
 |---|---|
-| `scripts/calm.be` | Background app. Goes back to the clock after 60 s, dims the display at night (22:30–07:00) and sets the corner indicators: 1 = unread mail, 2 = unread Slack, 3 = alert (internet down, or Claude Code waits for you). |
-| `scripts/pet.be` | A pet that walks and blinks. It follows Claude Code (working, waiting, done), dresses for the weather (sunglasses, umbrella, snow, sweat), sleeps at night and runs in with new mail, Slack DMs and meetings. Push the knob for hearts. |
+| `scripts/clock.be` | The home screen: large block digits with seconds and a weekday bar. Turn the knob for the date. It replaces the built-in Time app. |
+| `scripts/calm.be` | Background app. Goes back to the clock after 60 s, dims the display at night (22:30–07:00), saves the battery when unplugged and sets the corner indicators: 1 = unread mail, 2 = unread Slack, 3 = alert (internet down, or Claude Code waits for you). |
+| `scripts/pet.be` | A pet that walks, looks around and visits every 15 minutes. It does activities (laptop, coffee, book, music, exercise, ball, dance, plant), has small accidents (trips, slips on a banana, sneezes, hiccups, chases a butterfly), hides past the edges of the frame (side, under, upside down from the top) for hide-and-seek, follows Claude Code, dresses for the weather, sleeps at night and brings new mail, Slack DMs and meetings. Knob: push for hearts, hold to feed, turn to find it. Select: play ball. |
 | `scripts/google-calendar.be` | The current or next event with a countdown. Turn the knob for the next events. |
 | `scripts/gmail.be` | Unread mail in the inbox and the newest sender and subject. Hides itself when the inbox is read. |
 | `scripts/slack.be` | Unread Slack DMs and group DMs and the newest one. Runs on the clock with a user token. |

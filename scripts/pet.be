@@ -33,6 +33,10 @@ var PINK = 0xE06A6A
 var GREEN = 0x6FAF6A
 var BOUNCE = [0, 2, 3, 2, 0]
 var GLANCE = [0, 0, -1, 0, 0, 1, 0, -1]
+var EVENTS = ["trip", "banana", "sneeze", "yawn", "hiccup", "butterfly"]
+var EV_FOR = {"trip": 3400, "banana": 4600, "sneeze": 2400, "yawn": 3000, "hiccup": 4500, "butterfly": 5600}
+var STARS = [[-4, 0], [-2, -2], [2, -2], [4, 0], [2, 1], [-2, 1]]
+var FLUTTER = [0, 1, 2, 1, 0, -1, -2, -1]
 var ACTS = ["laptop", "coffee", "book", "music", "exercise", "ball", "dance", "plant", "hello"]
 
 class Pet
@@ -40,6 +44,7 @@ class Pet
   var wx, wx_ticks, news, seen
   var act, act_start, act_until, ball_x, ball_dx, ball_t, last_visit, idle_since, eat_until, away_until
   var hide, hide_until, pending_hide, yoff, yoff_target, yoff_t, look, say, say_until, duck_until, jump_until, hang
+  var ev, ev_start, ev_x, flip_now, land_until
 
   def init()
     self.x = 17
@@ -75,6 +80,11 @@ class Pet
     self.duck_until = 0
     self.jump_until = 0
     self.hang = 11
+    self.ev = nil
+    self.ev_start = 0
+    self.ev_x = 0
+    self.flip_now = false
+    self.land_until = 0
   end
 
   def setup()
@@ -118,6 +128,7 @@ class Pet
     self.wx_ticks -= 1
     self.check_news(night)
     self.check_visit(night)
+    if self.ev != nil && now_ms() - self.ev_start > EV_FOR[self.ev] self.end_ev() end
     if self.act != nil && now_ms() > self.act_until
       self.act = nil
       self.idle_since = now_ms()
@@ -141,6 +152,20 @@ class Pet
     if h >= 6 && h < 10 && math.rand() % 3 == 0 return "coffee" end
     if h >= 19 && math.rand() % 3 == 0 return "book" end
     return ACTS[math.rand() % size(ACTS)]
+  end
+
+  def start_ev(name)
+    if name == "banana" && self.x > width() - 28 name = "sneeze" end
+    self.ev = name
+    self.ev_start = now_ms()
+    self.ev_x = self.x + 24
+    self.target = self.x
+  end
+
+  def end_ev()
+    self.ev = nil
+    self.flip_now = false
+    self.rest_until = now_ms() + 1500
   end
 
   def offscreen()
@@ -316,6 +341,28 @@ class Pet
         return
       end
     end
+    if self.ev != nil
+      if called
+        self.end_ev()
+      else
+        var k = t - self.ev_start
+        var speed = 200
+        if self.ev == "banana" && k < 1600
+          self.target = self.ev_x - 15
+        elif self.ev == "butterfly"
+          self.target = min(max(k / 80 - 6 - 12, 0), width() - 18)
+          speed = 90
+        else
+          self.target = self.x
+        end
+        if self.x != self.target && t - self.last_step >= speed
+          self.last_step = t
+          self.x += self.target > self.x ? 1 : -1
+        end
+        self.moving = self.x != self.target
+        return
+      end
+    end
     if self.news == nil && called && (self.x < 0 || self.x > width() - 18)
       self.target = self.x < 0 ? 2 : width() - 20
       self.away_until = 0
@@ -341,7 +388,15 @@ class Pet
         self.away_until = 0
         var left = math.rand() % 2 == 0
         self.x = left ? -18 : width()
-        var how = math.rand() % 3
+        var how = math.rand() % 4
+        if how == 3
+          self.x = math.rand() % (width() - 17)
+          self.target = self.x
+          self.yoff = -16
+          self.yoff_target = 0
+          self.rest_until = t + 2000
+          return
+        end
         if how == 2 && self.mood == "idle"
           self.x = math.rand() % (width() - 17)
           self.target = self.x
@@ -365,6 +420,11 @@ class Pet
         self.hide = self.pending_hide
         self.pending_hide = nil
         self.hide_until = t + 6000 + math.rand() % 10000
+        self.moving = false
+        return
+      end
+      if self.news == nil && self.act == nil && self.mood == "idle" && self.x >= 0 && self.x <= width() - 18 && math.rand() % 5 == 0
+        self.start_ev(EVENTS[math.rand() % size(EVENTS)])
         self.moving = false
         return
       end
@@ -395,13 +455,16 @@ class Pet
     if t - self.last_step >= (fast ? 90 : 260)
       self.last_step = t
       self.x += self.target > self.x ? 1 : -1
+      if !fast && self.mood == "idle" && self.act == nil && self.x >= 0 && self.x <= width() - 18 && math.rand() % 300 == 0
+        self.start_ev("trip")
+      end
     end
     self.moving = true
   end
 
   def sprite(x, y, c, t, eyes_closed, wave)
     var r = 0
-    var flip = self.hide == "top"
+    var flip = self.hide == "top" || self.flip_now
     var blink = (t % 4200) < 150
     for spans : BODY
       var ry = flip ? y + 9 - r : y + r
@@ -429,6 +492,83 @@ class Pet
     var legs = self.moving && (t / 260) % 2 == 1 ? LEGS_B : LEGS_A
     for lx : legs
       rect_fill(flip ? x + 17 - lx : x + lx, flip ? y : y + 8, 1, 2, c)
+    end
+  end
+
+  def pancake(x, c, t)
+    rect_fill(x + 3, 12, 12, 1, c)
+    rect_fill(x + 1, 13, 16, 2, c)
+    var d = (t / 200) % 2
+    pixel(x + 6, 13 + d, 0)
+    pixel(x + 11, 14 - d, 0)
+    pixel(x, 15, c)
+    pixel(x + 17, 15, c)
+    pixel(x + 5, 15, c)
+    pixel(x + 12, 15, c)
+  end
+
+  def stars(cx, cy, t)
+    for i : 0 .. 2
+      var p = STARS[(t / 120 + i * 2) % size(STARS)]
+      pixel(cx + p[0], cy + p[1], AMBER)
+    end
+  end
+
+  def draw_event(x, y, c, t)
+    var k = t - self.ev_start
+    var e = self.ev
+    if e == "trip"
+      if k < 400
+        self.sprite(x + 1, y + 1, c, t, false, false)
+      elif k < 2600
+        self.pancake(x, c, t)
+        self.stars(x + 9, 9, t)
+      else
+        self.sprite(x, y - ((k / 200) % 2), c, t, false, false)
+      end
+    elif e == "banana"
+      if k < 1600
+        rect_fill(self.ev_x, 14, 1, 1, 0xE8C840)
+        rect_fill(self.ev_x + 1, 15, 2, 1, 0xE8C840)
+        pixel(self.ev_x + 3, 14, 0xE8C840)
+        self.sprite(x, y, c, t, false, false)
+      elif k < 3800
+        self.flip_now = true
+        self.moving = (t / 200) % 2 == 0
+        self.sprite(x, k < 2000 ? y - 3 : y, c, t, false, false)
+        self.flip_now = false
+        if k < 2600 pixel(self.ev_x + (k - 1600) / 40, 12 - (k - 1600) / 60, 0xE8C840) end
+        if k >= 2000 self.stars(x + 9, 3, t) end
+      else
+        self.sprite(x, y - ((k / 200) % 2), c, t, false, false)
+      end
+    elif e == "sneeze"
+      if k < 1400
+        self.sprite(x, k > 700 ? y - 1 : y, c, t, k > 700, false)
+      else
+        self.sprite(x - 2, y, c, t, true, false)
+        for i : 0 .. 4
+          pixel(x + 17 + (k - 1400) / 50 + i * 2, y + 2 + (i % 3) - 1, 0x9A948C)
+        end
+        text(min(x + 17, width() - text_width("achoo")), 6, "achoo", 0xF2D7B6)
+      end
+    elif e == "yawn"
+      self.sprite(x, y, c, t, true, false)
+      self.arms_up(x, y, c, true, true)
+      rect_fill(x + 8, y + 5, 2, 2, 0)
+    elif e == "hiccup"
+      var hic = k % 900 < 160
+      self.sprite(x, hic ? y - 2 : y, c, t, false, false)
+      if k % 900 < 500 text(min(x + 17, width() - text_width("hic")), 6, "hic", 0xF2D7B6) end
+    elif e == "butterfly"
+      var bx = k / 80 - 6
+      var by = 3 + FLUTTER[(k / 120) % size(FLUTTER)]
+      var near = (x + 9 - bx) < 4 && (bx - x - 9) < 4
+      self.sprite(x, near && (k / 250) % 2 == 0 ? y - 2 : y, c, t, false, false)
+      var up = (k / 150) % 2
+      pixel(bx, by, DARK)
+      pixel(bx - 1, by - up, PINK)
+      pixel(bx + 1, by - up, PINK)
     end
   end
 
@@ -624,9 +764,11 @@ class Pet
       return
     end
     var goal = t < self.duck_until ? 11 : self.yoff_target
-    if self.yoff != goal && t - self.yoff_t >= 70
+    if self.yoff != goal && t - self.yoff_t >= (self.yoff < 0 ? 35 : 70)
       self.yoff_t = t
+      var falling = self.yoff < 0
       self.yoff += goal > self.yoff ? 1 : -1
+      if falling && self.yoff == 0 self.land_until = t + 400 end
     end
     if self.moving
       self.look = self.target > self.x ? 1 : -1
@@ -661,6 +803,17 @@ class Pet
       else
         self.say = nil
       end
+    end
+    if self.ev != nil && self.news == nil
+      self.draw_event(x, y, c, t)
+      return
+    end
+    if t < self.land_until
+      y += 1
+      pixel(x - 1, 15, 0x6E6A64)
+      pixel(x - 2, 14, 0x6E6A64)
+      pixel(x + 18, 15, 0x6E6A64)
+      pixel(x + 19, 14, 0x6E6A64)
     end
     self.sprite(x, y, c, t, eyes_closed, wave)
     if act == "exercise" self.arms_up(x, y, c, (t / 300) % 2 == 0, (t / 300) % 2 == 0)

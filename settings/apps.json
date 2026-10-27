@@ -1,6 +1,6 @@
 {
   "order": [
-    "Time",
+    "Clock",
     "Pet",
     "Google-Calendar",
     "Gmail",
@@ -8,10 +8,12 @@
     "Beautiful-Weather",
     "Network",
     "Pomodoro-Timer",
+    "Time",
     "Status",
     "Calm"
   ],
   "disabled": [
+    "Time",
     "Status"
   ]
 }
