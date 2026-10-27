@@ -184,63 +184,79 @@ class Timer
     return true
   end
 
-  def hourglass(x, y, c, left, t, running)
+  def hourglass(x, y, h, c, left, t, running)
+    var m = y + h / 2
     rect_fill(x, y, 9, 1, c)
-    rect_fill(x, y + 10, 9, 1, c)
-    line(x + 1, y + 1, x + 4, y + 5, c)
-    line(x + 7, y + 1, x + 4, y + 5, c)
-    line(x + 4, y + 5, x + 1, y + 9, c)
-    line(x + 4, y + 5, x + 7, y + 9, c)
-    var done = 100 - left
-    if left > 0 pixel(x + 4, y + 3, AMBER) end
-    if left > 33 rect_fill(x + 3, y + 2, 3, 1, AMBER) end
-    if left > 66 rect_fill(x + 2, y + 1, 5, 1, AMBER) end
-    if done > 5 rect_fill(x + 2, y + 9, 5, 1, AMBER) end
-    if done > 40 rect_fill(x + 3, y + 8, 3, 1, AMBER) end
-    if done > 75 pixel(x + 4, y + 7, AMBER) end
-    if running && left > 0 pixel(x + 4, y + 5 + (t / 150) % 3, AMBER) end
+    rect_fill(x, y + h - 1, 9, 1, c)
+    line(x + 1, y + 1, x + 4, m, c)
+    line(x + 7, y + 1, x + 4, m, c)
+    line(x + 4, m, x + 1, y + h - 2, c)
+    line(x + 4, m, x + 7, y + h - 2, c)
+    var top = m - y - 1
+    var bot = y + h - 2 - m
+    var n = (left * top + 99) / 100
+    for i : 0 .. n - 1
+      var r = m - 1 - i
+      var wl = x + 1 + (r - y - 1) * 3 / max(top, 1)
+      if wl + 1 <= 2 * (x + 4) - wl - 1 rect_fill(wl + 1, r, 2 * (x + 4) - 2 * wl - 1, 1, AMBER) end
+    end
+    var nb = ((100 - left) * bot) / 100
+    for i : 0 .. nb - 1
+      var r = y + h - 2 - i
+      var wl = x + 4 - (r - m) * 3 / max(bot, 1)
+      if wl + 1 <= 2 * (x + 4) - wl - 1 rect_fill(wl + 1, r, 2 * (x + 4) - 2 * wl - 1, 1, AMBER) end
+    end
+    if running && left > 0 pixel(x + 4, m + (t / 150) % 3, AMBER) end
   end
 
-  def tomato(x, y, t, running)
-    circle_fill(x + 4, y + 6, 4, RED)
+  def tomato(x, y, h, t, running)
+    var r = (h - 2) / 2
+    var cy = y + h - 1 - r
+    circle_fill(x + 4, cy, r, RED)
     var sway = running ? ((t / 500) % 2) : 0
-    pixel(x + 4, y + 1, GREEN)
-    rect_fill(x + 2 + sway, y + 2, 5 - sway, 1, GREEN)
-    if running && sway == 1 pixel(x + 7, y + 1, GREEN) end
+    pixel(x + 4, y, GREEN)
+    rect_fill(x + 2 + sway, y + 1, 5 - sway, 1, GREEN)
+    if running && sway == 1 pixel(x + 7, y, GREEN) end
   end
 
-  def cup(x, y, t, running)
-    rect_fill(x, y + 4, 7, 6, CREAM)
-    rect(x + 7, y + 5, 2, 3, CREAM)
+  def cup(x, y, h, t, running)
+    rect_fill(x, y + 5, 7, h - 5, CREAM)
+    rect(x + 7, y + 6, 2, max((h - 5) / 2, 3), CREAM)
     if running
       for i : 0 .. 1
-        var k = (t / 250 + i * 2) % 4
-        pixel(x + 2 + i * 2 + k % 2, y + 3 - k, BROWN)
+        var k = (t / 250 + i * 2) % 5
+        pixel(x + 2 + i * 2 + k % 2, y + 4 - k, BROWN)
       end
     else
       pixel(x + 2, y + 1, BROWN)
       pixel(x + 4, y + 2, BROWN)
+      pixel(x + 2, y + 3, BROWN)
     end
   end
 
-  def stopwatch(x, y, c, ms)
-    circle(x + 4, y + 6, 4, c)
+  def stopwatch(x, y, h, c, ms)
+    var r = (h - 3) / 2
+    var cy = y + h - 1 - r
+    circle(x + 4, cy, r, c)
     rect_fill(x + 3, y, 3, 1, c)
-    pixel(x + 4, y + 1, c)
-    var h = HAND[(ms / 7500) % size(HAND)]
-    line(x + 4, y + 6, x + 4 + h[0], y + 6 + h[1], AMBER)
+    rect_fill(x + 4, y + 1, 1, cy - r - y - 1, c)
+    var hand = HAND[(ms / 7500) % size(HAND)]
+    line(x + 4, cy, x + 4 + hand[0], cy + hand[1], AMBER)
   end
 
   def draw()
     clear()
     var t = now_ms()
+    var dsize = store.get("size", "medium")
+    var dh = dsize == "large" ? 14 : (dsize == "small" ? 10 : 12)
+    var dy = (16 - dh) / 2
     var hide_icon = self.field == "mode" && !self.running() && self.left_ms == 0 && self.elapsed_ms == 0 && !self.ringing && (t / 400) % 3 == 0
     var label
     var progress = -1
     if self.mode == "stopwatch"
       var s = self.elapsed() / 1000
       label = s >= 6000 ? format("%d:%02d", s / 3600, s % 3600 / 60) : format("%02d:%02d", s / 60, s % 60)
-      if !hide_icon self.stopwatch(3, 2, CREAM, self.elapsed()) end
+      if !hide_icon self.stopwatch(3, dy, dh, CREAM, self.elapsed()) end
     else
       var secs = (self.remaining() + 999) / 1000
       label = secs >= 6000 ? format("%d:%02d", secs / 3600, secs % 3600 / 60) : format("%02d:%02d", secs / 60, secs % 60)
@@ -252,16 +268,16 @@ class Timer
           label = format("%02d:00", secs / 60)
         end
         if hide_icon
-        elif self.phase == "work" && !edit_brk self.tomato(3, 1, t, self.running())
-        else self.cup(3, 1, t, self.running())
+        elif self.phase == "work" && !edit_brk self.tomato(3, dy, dh, t, self.running())
+        else self.cup(3, dy, dh, t, self.running())
         end
         var n = store.get("rounds", 4)
         for i : 1 .. n
           var lit = i < self.round || (i == self.round && self.phase != "work") || (edit_brk && self.field == "long")
-          pixel(8 - n + i * 2, 14, lit ? AMBER : DARK)
+          pixel(8 - n + i * 2, 15, lit ? AMBER : DARK)
         end
       else
-        if !hide_icon self.hourglass(3, 2, CREAM, self.remaining() * 100 / max(self.set_s * 1000, 1), t, self.running()) end
+        if !hide_icon self.hourglass(3, dy, dh, CREAM, self.remaining() * 100 / max(self.set_s * 1000, 1), t, self.running()) end
       end
     end
     var c = self.running() ? store.get("run", 0xC8643C) : store.get("color", 0xF2D7B6)
@@ -269,8 +285,6 @@ class Timer
       c = (t / 300) % 2 == 0 ? AMBER : DARK
       label = "00:00"
     end
-    var dsize = store.get("size", "medium")
-    var dh = dsize == "large" ? 14 : (dsize == "small" ? 10 : 12)
     var st = blockfont.style(store.get("style", "compact"))
     var dw = st[0]
     var gap = store.get("spacing", "airy") == "airy" ? 2 : 1
