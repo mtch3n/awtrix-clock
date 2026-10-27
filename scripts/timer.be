@@ -11,7 +11,7 @@
 # @config  auto   bool   "Start the next phase by itself" default=false group="Pomodoro"
 # @config  tune   select "Ring tune" default=bells options=bells,chime,pips group="Sound"
 # @config  ring   number "Ring for" default=60 min=5 max=600 unit=s group="Sound"
-# @config  style  select "Digit style" default=airy options=airy,bold,thin,compact group="Digits"
+# @config  style  select "Digit style" default=compact options=compact,airy,bold,thin group="Digits"
 # @config  size   select "Digit size" default=medium options=large,medium,small help="large 6x14, medium 5x12, small 5x10" group="Digits"
 # @config  spacing select "Spacing" default=airy options=airy,tight group="Digits"
 # @config  color  color  "Digits" default=#F2D7B6 group="Colors"
@@ -244,7 +244,7 @@ class Timer
     end
     var dsize = store.get("size", "medium")
     var dh = dsize == "large" ? 14 : (dsize == "small" ? 10 : 12)
-    var st = blockfont.style(store.get("style", "airy"))
+    var st = blockfont.style(store.get("style", "compact"))
     var dw = st[0]
     var gap = store.get("spacing", "airy") == "airy" ? 2 : 1
     var w = blockfont.width(label, dw, gap)

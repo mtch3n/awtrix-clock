@@ -5,7 +5,7 @@
 # @config  left    select "Left side" default=icon options=icon,both,temp help="Only for the weather layout" group="Layout"
 # @config  size    select "Digit size" default=medium options=large,medium,small help="large 6x14, medium 5x12, small 5x10" group="Digits"
 # @config  spacing select "Spacing" default=airy options=airy,tight group="Digits"
-# @config  style   select "Digit style" default=airy options=airy,bold,thin,compact help="airy: thin sides, bold bars. compact: 5 wide" group="Digits"
+# @config  style   select "Digit style" default=compact options=compact,airy,bold,thin help="airy: thin sides, bold bars. compact: 5 wide" group="Digits"
 # @config  hours   select "Hours" default=auto options=auto,24,12 help="auto follows the clock's 24-hour setting" group="Digits"
 # @config  zero    bool   "Leading zero" default=true group="Digits"
 # @config  colon   select "Colon" default=steady options=steady,blink group="Digits"
@@ -158,7 +158,7 @@ class Clock
 
   def dims()
     var dsize = store.get("size", "medium")
-    var st = blockfont.style(store.get("style", "airy"))
+    var st = blockfont.style(store.get("style", "compact"))
     var h = dsize == "large" ? 14 : (dsize == "small" ? 10 : 12)
     var gap = store.get("spacing", "airy") == "airy" ? 2 : 1
     return [st[0], h, gap, st[1], st[2]]

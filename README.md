@@ -8,7 +8,7 @@ palette ("Warm paper") is used for all apps. A small Clawd-style pet brings the 
 
 | Script | What it shows |
 |---|---|
-| `scripts/clock.be` | The home screen: block digits with a static weather icon on the left and `HH:MM`, a weekday bar and an alert mark. Turn the knob for the date, the weather and the active alert. Many settings: layout (weather, `HH:MM`, `HH:MM:SS`), left side (icon, temperature, both), digit style (airy, bold, thin, compact), size and spacing, 12/24 h, leading zero, colon, seconds line, weather overlay and all colors. It replaces the built-in Time app. |
+| `scripts/clock.be` | The home screen: block digits with a static weather icon on the left and `HH:MM`, a weekday bar and an alert mark. Turn the knob for the date, the weather and the active alert. Many settings: layout (weather, `HH:MM`, `HH:MM:SS`), left side (icon, temperature, both), digit style (compact, airy, bold, thin), size and spacing, 12/24 h, leading zero, colon, seconds line, weather overlay and all colors. It replaces the built-in Time app. |
 | `scripts/timer.be` | Installed three times, as **Countdown**, **Pomodoro** and **Stopwatch** (the `mode` setting of each copy). Switch with LEFT/RIGHT like any app. Push (or select) to start and pause, turn to set minutes (Countdown: push switches minutes and seconds), hold to reset. Animated icons; it rings at zero and comes to the display. |
 | `scripts/sky.be` | Background app. Weather from Open-Meteo every 10 minutes and Environment Canada alerts (GeoMet `weather-alerts`) every 5 minutes for one place. Shares them with Clock, Pet and Calm, and shows one notification for each new alert. |
 | `scripts/blockfont.be` | Module. The block digits that Clock and Timer use. Install it first. |
