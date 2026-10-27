@@ -2,7 +2,9 @@
   "Clock": {
     "layout": "weather",
     "left": "icon",
-    "stroke": "bold",
+    "size": "medium",
+    "spacing": "airy",
+    "style": "airy",
     "hours": "auto",
     "zero": true,
     "colon": "steady",
@@ -38,37 +40,35 @@
     "hide": true
   },
   "Slack": {
-    "hide": true
+    "hide": true,
+    "bots": false,
+    "days": 7
   },
   "Network": {
     "every": 10,
     "slow": 150
   },
   "Timer": {
+    "mode": "countdown",
     "start": 5,
     "step": 1,
-    "tune": "bells",
-    "ring": 60,
-    "color": 15914934,
-    "run": 13132860
-  },
-  "Pomodoro-Timer": {
     "work": 25,
     "short": 5,
     "long": 15,
-    "cycles": 4,
+    "rounds": 4,
     "auto": false,
-    "tune": "chime",
-    "ring": 20,
-    "secs": false,
-    "pin": true,
-    "sound": true,
-    "wake": true
+    "tune": "bells",
+    "ring": 60,
+    "style": "airy",
+    "size": "medium",
+    "spacing": "airy",
+    "color": 15914934,
+    "run": 13132860
   },
   "Calm": {
     "back": 60,
     "home": "Clock",
-    "keep": "Pomodoro-Timer,Timer",
+    "keep": "Timer",
     "night": true,
     "nfrom": "22:30",
     "nto": "07:00",
@@ -78,6 +78,7 @@
     "bcap": 40,
     "bwarn": 20,
     "boff": 10,
+    "wover": true,
     "inds": true,
     "user": "admin"
   },

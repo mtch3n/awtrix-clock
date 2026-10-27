@@ -5,7 +5,7 @@
 # @config  left    select "Left side" default=icon options=icon,both,temp help="Only for the weather layout" group="Layout"
 # @config  size    select "Digit size" default=medium options=large,medium,small help="large 6x14, medium 5x12, small 5x10" group="Digits"
 # @config  spacing select "Spacing" default=airy options=airy,tight group="Digits"
-# @config  stroke  select "Digit weight" default=bold options=bold,thin group="Digits"
+# @config  style   select "Digit style" default=airy options=airy,bold,thin,compact help="airy: thin sides, bold bars. compact: 5 wide" group="Digits"
 # @config  hours   select "Hours" default=auto options=auto,24,12 help="auto follows the clock's 24-hour setting" group="Digits"
 # @config  zero    bool   "Leading zero" default=true group="Digits"
 # @config  colon   select "Colon" default=steady options=steady,blink group="Digits"
@@ -158,15 +158,14 @@ class Clock
 
   def dims()
     var dsize = store.get("size", "medium")
+    var st = blockfont.style(store.get("style", "airy"))
     var h = dsize == "large" ? 14 : (dsize == "small" ? 10 : 12)
-    var w = dsize == "large" ? 6 : 5
     var gap = store.get("spacing", "airy") == "airy" ? 2 : 1
-    return [w, h, gap]
+    return [st[0], h, gap, st[1], st[2]]
   end
 
   def draw_time(t)
     var layout = store.get("layout", "weather")
-    var s = store.get("stroke", "bold") == "bold" ? 2 : 1
     var dm = self.dims()
     var c = store.get("color", 0xF2D7B6)
     var colon = store.get("colon", "steady") == "steady" || second() % 2 == 0
@@ -175,7 +174,7 @@ class Clock
     var w = blockfont.width(str_t, dm[0], dm[2])
     var x = layout == "weather" ? width() - w - 2 : (width() - w) / 2
     var y = (16 - dm[1]) / 2
-    blockfont.text(str_t, x, y, c, s, colon, dm[0], dm[1], dm[2])
+    blockfont.text(str_t, x, y, c, dm[3], dm[4], colon, dm[0], dm[1], dm[2])
     if store.get("bar", true) self.weekday_bar(x, w) end
     if store.get("secbar", false) rect_fill(x, 0, second() * w / 59, 1, store.get("sec", 0x8C7B6B)) end
     if layout == "weather"
@@ -197,7 +196,7 @@ class Clock
     var c = store.get("color", 0xF2D7B6)
     var d = format("%02d", day())
     var dm = self.dims()
-    blockfont.text(d, 3, (16 - dm[1]) / 2, c, store.get("stroke", "bold") == "bold" ? 2 : 1, true, dm[0], dm[1], dm[2])
+    blockfont.text(d, 3, (16 - dm[1]) / 2, c, dm[3], dm[4], true, dm[0], dm[1], dm[2])
     text(22, 7, DAYS[weekday()], store.get("today", 0xC8643C))
     text(22, 15, MONTHS[month() - 1] + " " + str(year() % 100), c)
   end

@@ -11,6 +11,7 @@
 # @config  auto   bool   "Start the next phase by itself" default=false group="Pomodoro"
 # @config  tune   select "Ring tune" default=bells options=bells,chime,pips group="Sound"
 # @config  ring   number "Ring for" default=60 min=5 max=600 unit=s group="Sound"
+# @config  style  select "Digit style" default=airy options=airy,bold,thin,compact group="Digits"
 # @config  size   select "Digit size" default=medium options=large,medium,small help="large 6x14, medium 5x12, small 5x10" group="Digits"
 # @config  spacing select "Spacing" default=airy options=airy,tight group="Digits"
 # @config  color  color  "Digits" default=#F2D7B6 group="Colors"
@@ -230,19 +231,19 @@ class Timer
     if self.mode == "stopwatch"
       var s = self.elapsed() / 1000
       label = s >= 6000 ? format("%d:%02d", s / 3600, s % 3600 / 60) : format("%02d:%02d", s / 60, s % 60)
-      self.stopwatch(5, 2, CREAM, self.elapsed())
+      self.stopwatch(3, 2, CREAM, self.elapsed())
     else
       var secs = (self.remaining() + 999) / 1000
       label = secs >= 6000 ? format("%d:%02d", secs / 3600, secs % 3600 / 60) : format("%02d:%02d", secs / 60, secs % 60)
       if self.running() || self.left_ms > 0 progress = (self.set_s * 1000 - self.remaining()) * 100 / max(self.set_s * 1000, 1) end
       if self.mode == "pomodoro"
-        if self.phase == "work" self.tomato(5, 1, t, self.running()) else self.cup(5, 1, t, self.running()) end
+        if self.phase == "work" self.tomato(3, 1, t, self.running()) else self.cup(3, 1, t, self.running()) end
         var n = store.get("rounds", 4)
         for i : 1 .. n
-          pixel(10 - n + i * 2, 14, i < self.round || (i == self.round && self.phase != "work") ? AMBER : DARK)
+          pixel(8 - n + i * 2, 14, i < self.round || (i == self.round && self.phase != "work") ? AMBER : DARK)
         end
       else
-        self.hourglass(5, 2, CREAM, self.remaining() * 100 / max(self.set_s * 1000, 1), t, self.running())
+        self.hourglass(3, 2, CREAM, self.remaining() * 100 / max(self.set_s * 1000, 1), t, self.running())
       end
     end
     var c = self.running() ? store.get("run", 0xC8643C) : store.get("color", 0xF2D7B6)
@@ -252,12 +253,13 @@ class Timer
     end
     var dsize = store.get("size", "medium")
     var dh = dsize == "large" ? 14 : (dsize == "small" ? 10 : 12)
-    var dw = dsize == "large" ? 6 : 5
+    var st = blockfont.style(store.get("style", "airy"))
+    var dw = st[0]
     var gap = store.get("spacing", "airy") == "airy" ? 2 : 1
     var w = blockfont.width(label, dw, gap)
     var x = width() - w - 2
     var paused = !self.running() && (self.left_ms > 0 || self.elapsed_ms > 0)
-    blockfont.text(label, x, (16 - dh) / 2, c, 2, !paused || (t / 500) % 2 == 0, dw, dh, gap)
+    blockfont.text(label, x, (16 - dh) / 2, c, st[1], st[2], !paused || (t / 500) % 2 == 0, dw, dh, gap)
     if progress >= 0 rect_fill(x, 15, progress * w / 100, 1, BROWN) end
     if self.mode == "countdown" && !self.running() && self.left_ms == 0 && !self.ringing && size(label) == 5
       rect_fill(self.field == "min" ? x : x + 2 * dw + 3 * gap + 2, 15, 2 * dw + gap, 1, (t / 400) % 3 == 0 ? DARK : 0xF2D7B6)
