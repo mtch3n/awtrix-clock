@@ -157,9 +157,9 @@ class Clock
   end
 
   def dims()
-    var size = store.get("size", "medium")
-    var h = size == "large" ? 14 : (size == "small" ? 10 : 12)
-    var w = size == "large" ? 6 : 5
+    var dsize = store.get("size", "medium")
+    var h = dsize == "large" ? 14 : (dsize == "small" ? 10 : 12)
+    var w = dsize == "large" ? 6 : 5
     var gap = store.get("spacing", "airy") == "airy" ? 2 : 1
     return [w, h, gap]
   end
