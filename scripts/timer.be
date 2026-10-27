@@ -1,7 +1,7 @@
 # @name    Timer
-# @desc    Countdown, Pomodoro or stopwatch, one mode per installed copy. Push or select starts and pauses, turn to set, hold to reset
+# @desc    Countdown, Pomodoro and stopwatch. Stopped: push moves the selection (mode, minutes, seconds), turn changes it. Select starts and pauses, hold resets
 # @display 52x16
-# @config  mode   select "Mode" default=countdown options=countdown,pomodoro,stopwatch
+# @config  mode   select "First mode" default=countdown options=countdown,pomodoro,stopwatch
 # @config  start  number "Countdown" default=5 min=1 max=180 unit=min group="Countdown"
 # @config  step   number "Knob step" default=1 min=1 max=30 unit=min group="Countdown"
 # @config  work   number "Focus" default=25 min=5 max=90 unit=min group="Pomodoro"
@@ -18,6 +18,7 @@
 # @config  run    color  "Running" default=#C8643C group="Colors"
 import blockfont
 
+var MODES = ["countdown", "pomodoro", "stopwatch"]
 var TUNES = {"bells": "bells:d=8,o=6,b=140:e,g,e,c,4p,e,g,e,c",
              "chime": "chime:d=4,o=5,b=100:e6,c6,d6,g,2p,g,d6,e6,c6",
              "pips": "pips:d=16,o=6,b=200:c,p,c,p,c,p,c"}
@@ -33,7 +34,7 @@ class Timer
   var mode, set_s, end_ms, left_ms, started_ms, elapsed_ms, ringing, ring_until, last_tone, phase, round, field
 
   def init()
-    self.mode = store.get("mode", "countdown")
+    self.mode = store.get("last_mode", store.get("mode", "countdown"))
     self.ringing = false
     self.ring_until = 0
     self.last_tone = 0
@@ -47,7 +48,7 @@ class Timer
     self.elapsed_ms = 0
     self.phase = "work"
     self.round = 1
-    self.field = "min"
+    self.field = self.mode == "countdown" ? "min" : "mode"
     self.set_s = self.mode == "pomodoro" ? store.get("work", 25) * 60 : store.get("start", 5) * 60
   end
 
@@ -141,14 +142,22 @@ class Timer
       self.stop_ring()
       return true
     end
-    var editing = self.mode == "countdown" && !self.running() && self.left_ms == 0
+    var editing = !self.running() && self.left_ms == 0 && self.elapsed_ms == 0
+    var fields = self.mode == "countdown" ? ["mode", "min", "sec"] : (self.mode == "pomodoro" ? ["mode", "min"] : ["mode"])
     if event == "press" && editing
-      self.field = self.field == "min" ? "sec" : "min"
+      self.field = fields[((fields.find(self.field) == nil ? 0 : fields.find(self.field)) + 1) % size(fields)]
     elif event == "press"
       self.toggle()
+    elif (event == "left" || event == "right") && editing && self.field == "mode"
+      var i = MODES.find(self.mode)
+      self.mode = MODES[(i + (event == "right" ? 1 : 2)) % 3]
+      store.set("last_mode", self.mode)
+      self.reset()
+      self.field = "mode"
     elif event == "long"
       self.reset()
-    elif (event == "left" || event == "right") && editing && self.field == "sec"
+      self.field = "mode"
+    elif (event == "left" || event == "right") && editing && self.field == "sec" && self.mode == "countdown"
       var m = self.set_s / 60
       var sec = (self.set_s % 60 + (event == "right" ? 1 : 59)) % 60
       self.set_s = max(m * 60 + sec, 5)
@@ -252,8 +261,13 @@ class Timer
     var paused = !self.running() && (self.left_ms > 0 || self.elapsed_ms > 0)
     blockfont.text(label, x, (16 - dh) / 2, c, st[1], st[2], !paused || (t / 500) % 2 == 0, dw, dh, gap)
     if progress >= 0 rect_fill(x, 15, progress * w / 100, 1, BROWN) end
-    if self.mode == "countdown" && !self.running() && self.left_ms == 0 && !self.ringing && size(label) == 5
-      rect_fill(self.field == "min" ? x : x + 2 * dw + 3 * gap + 2, 15, 2 * dw + gap, 1, (t / 400) % 3 == 0 ? DARK : 0xF2D7B6)
+    if !self.running() && self.left_ms == 0 && self.elapsed_ms == 0 && !self.ringing
+      var on = (t / 400) % 3 == 0 ? DARK : 0xF2D7B6
+      if self.field == "mode"
+        rect_fill(2, 15, 11, 1, on)
+      elif size(label) == 5 && self.mode != "stopwatch"
+        rect_fill(self.field == "min" ? x : x + 2 * dw + 3 * gap + 2, 15, 2 * dw + gap, 1, on)
+      end
     end
   end
 end

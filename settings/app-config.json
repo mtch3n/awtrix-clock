@@ -48,42 +48,8 @@
     "every": 10,
     "slow": 150
   },
-  "Countdown": {
+  "Timer": {
     "mode": "countdown",
-    "start": 5,
-    "step": 1,
-    "work": 25,
-    "short": 5,
-    "long": 15,
-    "rounds": 4,
-    "auto": false,
-    "tune": "bells",
-    "ring": 60,
-    "style": "compact",
-    "size": "medium",
-    "spacing": "airy",
-    "color": 15914934,
-    "run": 13132860
-  },
-  "Pomodoro": {
-    "mode": "pomodoro",
-    "start": 5,
-    "step": 1,
-    "work": 25,
-    "short": 5,
-    "long": 15,
-    "rounds": 4,
-    "auto": false,
-    "tune": "bells",
-    "ring": 60,
-    "style": "compact",
-    "size": "medium",
-    "spacing": "airy",
-    "color": 15914934,
-    "run": 13132860
-  },
-  "Stopwatch": {
-    "mode": "stopwatch",
     "start": 5,
     "step": 1,
     "work": 25,
@@ -102,7 +68,7 @@
   "Calm": {
     "back": 60,
     "home": "Clock",
-    "keep": "Countdown,Pomodoro,Stopwatch",
+    "keep": "Timer",
     "night": true,
     "nfrom": "22:30",
     "nto": "07:00",

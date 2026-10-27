@@ -10,7 +10,7 @@ SCRIPTS = {
     "blockfont": "blockfont",
     "sky": "Sky",
     "clock": "Clock",
-    "timer": ["Countdown", "Pomodoro", "Stopwatch"],
+    "timer": "Timer",
     "calm": "Calm",
     "google-calendar": "Google-Calendar",
     "gmail": "Gmail",
