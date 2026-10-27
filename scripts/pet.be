@@ -1,7 +1,7 @@
 # @name    Pet
 # @desc    A small Clawd-style pet: visits now and then, does things, follows Claude Code, dresses for the weather and brings the news
 # @display 52x16
-# @config  visit number "Visit every" default=20 min=0 max=240 unit=min help="0 = never. Only in the day"
+# @config  visit number "Visit every" default=15 min=0 max=240 unit=min help="0 = never. Only in the day"
 # @config  pop   bool   "Show me when Claude waits" default=true
 # @config  news  bool   "Bring mail, Slack and meetings" default=true
 # @config  hungry number "Hungry after" default=6 min=1 max=48 unit=h
@@ -59,7 +59,7 @@ class Pet
     self.ball_x = 0
     self.ball_dx = 1
     self.ball_t = 0
-    self.last_visit = int(epoch_ms() / 1000)
+    self.last_visit = store.get("last_visit", int(epoch_ms() / 1000))
     self.idle_since = now_ms()
     self.eat_until = 0
     self.away_until = 0
@@ -131,6 +131,7 @@ class Pet
     if night || every <= 0 || self.news != nil || self.mood != "idle" || hour() < 0 return end
     if now - self.last_visit < every * 60 return end
     self.last_visit = now
+    store.set("last_visit", now)
     self.start_act(self.pick_act())
     rotation.show()
   end
