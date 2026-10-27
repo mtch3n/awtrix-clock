@@ -7,10 +7,12 @@
     "Slack",
     "Beautiful-Weather",
     "Network",
+    "Timer",
     "Pomodoro-Timer",
     "Time",
     "Status",
-    "Calm"
+    "Calm",
+    "Sky"
   ],
   "disabled": [
     "Time",

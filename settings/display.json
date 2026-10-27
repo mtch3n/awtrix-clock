@@ -1,6 +1,6 @@
 {
     "autoBrightness": false,
-    "brightness": 144,
+    "brightness": 128,
     "autoTransition": false,
     "textColor": "#F2D7B6",
     "transitionEffect": "Fade",
@@ -29,7 +29,7 @@
     "humidityColor": null,
     "temperatureColor": null,
     "batteryColor": null,
-    "volume": 45,
+    "volume": 40,
     "radioVolume": 80,
     "appVolume": 100,
     "alertVolume": 100,

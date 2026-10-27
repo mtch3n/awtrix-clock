@@ -7,7 +7,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = {
+    "blockfont": "blockfont",
+    "sky": "Sky",
     "clock": "Clock",
+    "timer": "Timer",
     "calm": "Calm",
     "google-calendar": "Google-Calendar",
     "gmail": "Gmail",
