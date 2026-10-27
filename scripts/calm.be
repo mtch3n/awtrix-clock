@@ -3,7 +3,7 @@
 # @headless true
 # @config  back    number "Back to the clock after" default=60 min=0 max=3600 unit=s help="0 = never" group="Return"
 # @config  home    text   "Clock app"     default="Time" group="Return"
-# @config  keep    text   "Never leave"   default="Pomodoro-Timer" help="Apps that stay, separated by commas" group="Return"
+# @config  keep    text   "Never leave"   default="Pomodoro-Timer,Timer" help="Apps that stay, separated by commas" group="Return"
 # @config  night   bool   "Night mode"    default=true group="Night"
 # @config  nfrom   text   "Night from"    default="22:30" group="Night"
 # @config  nto     text   "Night until"   default="07:00" group="Night"
@@ -13,7 +13,7 @@
 # @config  bcap    number "Brightness on battery" default=40 min=1 max=255 group="Battery"
 # @config  bwarn   number "Warn below" default=20 min=0 max=100 unit=% group="Battery"
 # @config  boff    number "Display off below" default=10 min=0 max=100 unit=% group="Battery"
-# @config  inds    bool   "Indicators"    default=true help="Mail, Slack and alerts in the corners" group="Indicators"
+# @config  inds    bool   "Indicators"    default=true help="Mail, Slack and alerts (internet, Claude, weather) in the corners" group="Indicators"
 # @config  user    text   "Web login user" default="admin" group="Web login"
 # @config  pass    text   "Web login password" default="" help="Needed for the return and the indicators" group="Web login"
 import json
@@ -169,6 +169,8 @@ class Calm
       alert = {'color': "#600000", 'blinkMs': 1000}
     elif shared.get("Pet.claude") == "waiting"
       alert = {'color': "#603000", 'fadeMs': 2000}
+    elif shared.get("Sky.alert_type") == "warning" || shared.get("Sky.alert_type") == "watch"
+      alert = {'color': format("#%06X", (shared.get("Sky.alert_color", 0xE0C040) >> 2) & 0x3F3F3F), 'blinkMs': 3000}
     end
     self.set_ind(1, on && mail != nil && mail > 0 ? {'color': "#001040"} : nil)
     self.set_ind(2, on && slack != nil && slack > 0 ? {'color': "#200030"} : nil)

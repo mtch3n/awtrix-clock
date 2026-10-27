@@ -3,10 +3,8 @@
 # @display 52x16
 # @config  visit number "Visit every" default=15 min=0 max=240 unit=min help="0 = never. Only in the day"
 # @config  pop   bool   "Show me when Claude waits" default=true
-# @config  news  bool   "Bring mail, Slack and meetings" default=true
+# @config  news  bool   "Bring mail, Slack, alerts and meetings" default=true
 # @config  hungry number "Hungry after" default=6 min=1 max=48 unit=h
-# @config  lat   number "Latitude"  default=43.6532 min=-90 max=90 step=0.0001 group="Weather"
-# @config  lon   number "Longitude" default=-79.3832 min=-180 max=180 step=0.0001 group="Weather"
 # @config  color color  "Color" default=#D77757
 import math
 import json
@@ -37,14 +35,18 @@ var EVENTS = ["trip", "banana", "sneeze", "yawn", "hiccup", "butterfly"]
 var EV_FOR = {"trip": 3400, "banana": 4600, "sneeze": 2400, "yawn": 3000, "hiccup": 4500, "butterfly": 5600}
 var STARS = [[-4, 0], [-2, -2], [2, -2], [4, 0], [2, 1], [-2, 1]]
 var FLUTTER = [0, 1, 2, 1, 0, -1, -2, -1]
+var MINI = [".#######.", ".#.###.#.", "#########", ".#######."]
+var MINI_LEGS_A = [1, 3, 5, 7]
+var MINI_LEGS_B = [2, 4, 6, 8]
 var ACTS = ["laptop", "coffee", "book", "music", "exercise", "ball", "dance", "plant", "hello"]
 
 class Pet
   var x, target, rest_until, last_step, moving, hearts_until, mood, popped
-  var wx, wx_ticks, news, seen
+  var news, seen
   var act, act_start, act_until, ball_x, ball_dx, ball_t, last_visit, idle_since, eat_until, away_until
   var hide, hide_until, pending_hide, yoff, yoff_target, yoff_t, look, say, say_until, duck_until, jump_until, hang
   var ev, ev_start, ev_x, flip_now, land_until
+  var depth, depth_start, depth_until, far_x, far_target, far_step
 
   def init()
     self.x = 17
@@ -54,8 +56,6 @@ class Pet
     self.moving = false
     self.hearts_until = 0
     self.mood = "idle"
-    self.wx = store.get("wx")
-    self.wx_ticks = 0
     self.news = nil
     self.seen = {}
     self.act = nil
@@ -85,6 +85,27 @@ class Pet
     self.ev_x = 0
     self.flip_now = false
     self.land_until = 0
+    self.depth = nil
+    self.depth_start = 0
+    self.depth_until = 0
+    self.far_x = 0
+    self.far_target = 0
+    self.far_step = 0
+  end
+
+  def start_depth(kind)
+    self.depth = kind
+    self.depth_start = now_ms()
+    self.depth_until = now_ms() + (kind == "far" ? 10000 + math.rand() % 10000 : 5000 + math.rand() % 3000)
+    self.far_x = min(max(self.x + 4, 0), width() - 9)
+    self.far_target = self.far_x
+  end
+
+  def end_depth()
+    if self.depth == "far" self.x = min(max(self.far_x - 4, 0), width() - 18) end
+    self.target = self.x
+    self.depth = nil
+    self.rest_until = now_ms() + 1500
   end
 
   def setup()
@@ -121,11 +142,6 @@ class Pet
       self.mood = m
       shared.set("claude", m == "idle" ? nil : m)
     end
-    if self.wx_ticks <= 0
-      self.wx_ticks = 900
-      self.fetch_weather()
-    end
-    self.wx_ticks -= 1
     self.check_news(night)
     self.check_visit(night)
     if self.ev != nil && now_ms() - self.ev_start > EV_FOR[self.ev] self.end_ev() end
@@ -188,36 +204,20 @@ class Pet
     end
   end
 
-  def fetch_weather()
-    var url = format("https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current=temperature_2m,weather_code,is_day",
-                     store.get("lat", 43.6532), store.get("lon", -79.3832))
-    http.get(url, / b, st -> self.on_weather(b, st))
-  end
-
-  def on_weather(body, status)
-    if status != 200 || body == nil return end
-    var d = json.load(body)
-    if !isinstance(d, map) return end
-    var cur = d.find("current")
-    if !isinstance(cur, map) return end
-    self.wx = {"temp": cur.find("temperature_2m", 10), "code": cur.find("weather_code", 0), "day": cur.find("is_day", 1)}
-    store.set("wx", self.wx)
-  end
-
   def wx_kind()
-    if self.wx == nil return "" end
-    var code = self.wx["code"]
-    var temp = self.wx["temp"]
+    var code = shared.get("Sky.code")
+    var temp = shared.get("Sky.temp")
+    if code == nil || temp == nil return "" end
     if (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95 return "rain" end
     if (code >= 71 && code <= 77) || code == 85 || code == 86 return "snow" end
     if temp < 0 return "cold" end
     if temp >= 28 return "hot" end
-    if code <= 1 && self.wx["day"] == 1 return "sun" end
+    if code <= 1 && shared.get("Sky.day", 1) == 1 return "sun" end
     return ""
   end
 
   def check_news(night)
-    for src : [["Gmail", "mail"], ["Slack", "slack"]]
+    for src : [["Gmail", "mail"], ["Slack", "slack"], ["Sky", "alert"]]
       var seq = shared.get(src[0] + ".seq")
       if seq != nil
         var before = self.seen.find(src[0])
@@ -295,6 +295,15 @@ class Pet
   end
 
   def on_knob(event)
+    if self.depth == "near" && event == "press"
+      self.hearts_until = now_ms() + 3000
+      self.depth_until = max(self.depth_until, now_ms() + 3000)
+      return true
+    end
+    if self.depth != nil
+      self.end_depth()
+      return true
+    end
     if self.hide != nil
       self.seek(event)
       return true
@@ -330,6 +339,22 @@ class Pet
 
   def walk(t, fast)
     var called = self.mood != "idle" || self.act != nil || fast || self.news != nil
+    if self.depth != nil
+      if called || t >= self.depth_until
+        self.end_depth()
+      else
+        if self.depth == "far"
+          if self.far_x == self.far_target
+            if t - self.far_step > 2500 self.far_target = math.rand() % (width() - 8) end
+          elif t - self.far_step >= 420
+            self.far_step = t
+            self.far_x += self.far_target > self.far_x ? 1 : -1
+          end
+        end
+        self.moving = false
+        return
+      end
+    end
     if self.hide != nil
       if called || t >= self.hide_until
         var side = self.hide == "side"
@@ -435,6 +460,14 @@ class Pet
         elif pick == 1
           self.target = math.rand() % 2 == 0 ? -9 : width() - 9
           self.pending_hide = "side"
+        elif pick == 3 && self.mood == "idle"
+          self.start_depth("far")
+          self.moving = false
+          return
+        elif pick == 4 && self.mood == "idle"
+          self.start_depth("near")
+          self.moving = false
+          return
         elif pick == 2 && self.mood == "idle"
           self.hide = "under"
           self.yoff_target = 6
@@ -492,6 +525,61 @@ class Pet
     var legs = self.moving && (t / 260) % 2 == 1 ? LEGS_B : LEGS_A
     for lx : legs
       rect_fill(flip ? x + 17 - lx : x + lx, flip ? y : y + 8, 1, 2, c)
+    end
+  end
+
+  def draw_depth(c, t)
+    var k = t - self.depth_start
+    var left = self.depth_until - t
+    if self.depth == "far"
+      if k < 450 || left < 450
+        var p = k < 450 ? k : left
+        self.sprite(self.x, 6 - p / 110, c, t, false, false)
+        return
+      end
+      var y = 5
+      var moving = self.far_x != self.far_target
+      var blink = (t % 4200) < 150
+      var dim = ((c >> 1) & 0x7F7F7F)
+      var r = 0
+      for row : MINI
+        for i : 0 .. 8
+          if row[i] == "#" pixel(self.far_x + i, y + r, dim) end
+        end
+        r += 1
+      end
+      if blink
+        pixel(self.far_x + 2, y + 1, dim)
+        pixel(self.far_x + 6, y + 1, dim)
+      end
+      for lx : (moving && (t / 420) % 2 == 1 ? MINI_LEGS_B : MINI_LEGS_A)
+        pixel(self.far_x + lx, y + 4, dim)
+      end
+      return
+    end
+    var rise = k < 600 ? k / 50 : (left < 600 ? (600 - left) / 50 : 0)
+    var x = (width() - 36) / 2
+    var y = 2 + (k < 600 ? 12 - rise : rise)
+    var r = 0
+    for spans : BODY
+      if r == 2 || r == 3
+        rect_fill(x + 6, y + r * 2, 24, 2, c)
+        if (t % 4200) >= 150
+          var look = GLANCE[(t / 900) % size(GLANCE)] * 2
+          rect_fill(x + 10 + look, y + r * 2, 2, 2, 0)
+          rect_fill(x + 24 + look, y + r * 2, 2, 2, 0)
+        end
+      else
+        for sp : spans
+          rect_fill(x + sp[0] * 2, y + r * 2, (sp[1] - sp[0] + 1) * 2, 2, c)
+        end
+      end
+      r += 1
+    end
+    if t < self.hearts_until
+      var up = (self.hearts_until - t) / 400
+      self.bitmap(HEART, x - 2, up - 3, PINK)
+      self.bitmap(HEART, x + 33, up - 5, 0xE89A90)
     end
   end
 
@@ -751,6 +839,10 @@ class Pet
     end
     var kind = self.wx_kind()
     self.weather_back(kind, t)
+    if self.depth != nil
+      self.draw_depth(c, t)
+      return
+    end
     var x = self.x
     if self.hide == "top"
       var want = t < self.duck_until ? 11 : 4
@@ -827,6 +919,14 @@ class Pet
         self.envelope(x + 17, y + 3, CREAM)
       elif self.news["kind"] == "slack"
         self.bubble(x + 17, y + 2, CREAM)
+      elif self.news["kind"] == "alert"
+        var ac = shared.get("Sky.alert_color", AMBER)
+        line(x + 21, y + 1, x + 17, y + 7, ac)
+        line(x + 21, y + 1, x + 25, y + 7, ac)
+        line(x + 17, y + 7, x + 25, y + 7, ac)
+        pixel(x + 21, y + 3, ac)
+        pixel(x + 21, y + 4, ac)
+        pixel(x + 21, y + 6, ac)
       else
         circle(x + 20, y + 5, 3, CREAM)
         line(x + 20, y + 5, x + 20, y + 3, AMBER)
