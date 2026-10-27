@@ -32,7 +32,7 @@ var GREEN = 0x6FAF6A
 var BOUNCE = [0, 2, 3, 2, 0]
 var GLANCE = [0, 0, -1, 0, 0, 1, 0, -1]
 var EVENTS = ["trip", "banana", "sneeze", "yawn", "hiccup", "butterfly"]
-var EV_FOR = {"trip": 3400, "banana": 4600, "sneeze": 2400, "yawn": 3000, "hiccup": 4500, "butterfly": 5600}
+var EV_FOR = {"wake": 7500, "trip": 3400, "banana": 4600, "sneeze": 2400, "yawn": 3000, "hiccup": 4500, "butterfly": 5600}
 var STARS = [[-4, 0], [-2, -2], [2, -2], [4, 0], [2, 1], [-2, 1]]
 var FLUTTER = [0, 1, 2, 1, 0, -1, -2, -1]
 var MINI = [".#######.", ".#.###.#.", "#########", ".#######."]
@@ -132,6 +132,12 @@ class Pet
     var night = shared.get("Calm.night", false)
     if !self.popped
       self.popped = true
+      if now_ms() < 90000 && !night && hour() >= 0
+        self.x = 17
+        self.target = 17
+        self.start_ev("wake")
+        rotation.show()
+      end
       var fresh = int(epoch_ms() / 1000) - store.get("claude_at", 0) < 15
       if fresh && store.get("pop", true) && !night
         if self.mood == "waiting" || self.mood == "done" rotation.show() end
@@ -605,7 +611,25 @@ class Pet
   def draw_event(x, y, c, t)
     var k = t - self.ev_start
     var e = self.ev
-    if e == "trip"
+    if e == "wake"
+      if k < 2000
+        self.sprite(x, y, c, t, true, false)
+        var drift = (t / 600) % 4
+        self.bitmap(ZED, x + 17, 3 - drift / 2, 0x3050A0)
+      elif k < 3600
+        self.sprite(x, y - (k < 2600 ? 0 : 1), c, t, true, false)
+        self.arms_up(x, y - (k < 2600 ? 0 : 1), c, true, true)
+        rect_fill(x + 8, y + 5, 2, 2, 0)
+      elif k < 4600
+        self.look = GLANCE[(k / 250) % size(GLANCE)]
+        self.sprite(x, y, c, t, k > 3900 && k < 4050, false)
+      else
+        self.sprite(x, y, c, t, false, true)
+        var h = hour()
+        var hello = h < 12 ? "morning!" : (h < 18 ? "hi!" : "evening!")
+        text(min(x + 19, width() - text_width(hello)), 6, hello, 0xF2D7B6)
+      end
+    elif e == "trip"
       if k < 400
         self.sprite(x + 1, y + 1, c, t, false, false)
       elif k < 2600
