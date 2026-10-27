@@ -9,7 +9,7 @@ palette ("Warm paper") is used for all apps. A small Clawd-style pet brings the 
 | Script | What it shows |
 |---|---|
 | `scripts/clock.be` | The home screen: block digits with a static weather icon on the left and `HH:MM`, a weekday bar and an alert mark. Turn the knob for the date, the weather and the active alert. Many settings: layout (weather, `HH:MM`, `HH:MM:SS`), left side (icon, temperature, both), bold or thin digits, 12/24 h, leading zero, colon, seconds line, weather overlay and all colors. It replaces the built-in Time app. |
-| `scripts/timer.be` | A countdown. Turn the knob to set it, push (or select) to start and pause, hold to reset. At zero it comes to the display and rings until you push. |
+| `scripts/timer.be` | Countdown, Pomodoro and stopwatch. Push (or select) to start and pause, turn to set the minutes, hold to reset, hold again to change the mode. It rings at zero and comes to the display. |
 | `scripts/sky.be` | Background app. Weather from Open-Meteo every 10 minutes and Environment Canada alerts (GeoMet `weather-alerts`) every 5 minutes for one place. Shares them with Clock, Pet and Calm, and shows one notification for each new alert. |
 | `scripts/blockfont.be` | Module. The block digits that Clock and Timer use. Install it first. |
 | `scripts/calm.be` | Background app. Goes back to the clock after 60 s, dims the display at night (22:30–07:00), saves the battery when unplugged and sets the corner indicators: 1 = unread mail, 2 = unread Slack, 3 = alert (internet down, Claude Code waits for you, or a weather watch or warning). |
@@ -19,8 +19,6 @@ palette ("Warm paper") is used for all apps. A small Clawd-style pet brings the 
 | `scripts/slack.be` | Unread Slack DMs and group DMs and the newest one. Runs on the clock with a user token. |
 | `scripts/network.be` | Public IP, provider, location, HTTPS time to Cloudflare and Wi-Fi signal. Turn the knob for the pages. |
 
-One app comes from the [AWTRIX Hub](https://awtrix.de) and is not in this repository:
-[Pomodoro Timer](https://awtrix.de/script/9B9ojlCGyaxL).
 
 The apps talk to each other with `shared` values: Calendar shares the next meeting, Gmail and
 Slack share the newest message, Calm shares the night state, and the pet and Calm read them.
@@ -34,14 +32,13 @@ Slack share the newest message, Calm shares the night state, and the pet and Cal
 ## Put it on a clock
 
 1. Install AWTRIX NG on the TC002 and switch on the web login.
-2. Send Pomodoro Timer from the AWTRIX Hub.
-3. Run:
+2. Run:
 
     ```sh
     AWTRIX_HOST=192.168.x.x AWTRIX_USER=admin AWTRIX_PASS=... python3 tools/deploy.py
     ```
 
-4. In the web UI, under **Apps → ⚙**:
+3. In the web UI, under **Apps → ⚙**:
     - **Calm**: enter the web login password.
     - **Google-Calendar** and **Gmail**: enter the client ID and secret of a Google OAuth client
       (type "Web application", redirect URI `https://awtrix.de/oauth/callback`), then sign in. Use
