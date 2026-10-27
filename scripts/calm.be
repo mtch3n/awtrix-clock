@@ -1,5 +1,5 @@
 # @name    Calm
-# @desc    Night mode, return to the clock after a delay, and the corner indicators
+# @desc    Night mode, battery saving, return to the clock after a delay, and the corner indicators
 # @headless true
 # @config  back    number "Back to the clock after" default=60 min=0 max=3600 unit=s help="0 = never" group="Return"
 # @config  home    text   "Clock app"     default="Time" group="Return"
@@ -9,6 +9,10 @@
 # @config  nto     text   "Night until"   default="07:00" group="Night"
 # @config  nmode   select "At night"      default=dim options=dim,off group="Night"
 # @config  nbright number "Night brightness" default=8 min=1 max=255 group="Night"
+# @config  bsave   bool   "Save battery when unplugged" default=true group="Battery"
+# @config  bcap    number "Brightness on battery" default=40 min=1 max=255 group="Battery"
+# @config  bwarn   number "Warn below" default=20 min=0 max=100 unit=% group="Battery"
+# @config  boff    number "Display off below" default=10 min=0 max=100 unit=% group="Battery"
 # @config  inds    bool   "Indicators"    default=true help="Mail, Slack and alerts in the corners" group="Indicators"
 # @config  user    text   "Web login user" default="admin" group="Web login"
 # @config  pass    text   "Web login password" default="" help="Needed for the return and the indicators" group="Web login"
@@ -48,7 +52,7 @@ def b64(s)
 end
 
 class Calm
-  var ticks, app, since, sent, auth
+  var ticks, app, since, sent, auth, usb, pct
 
   def init()
     self.ticks = 0
@@ -56,6 +60,8 @@ class Calm
     self.since = now_ms()
     self.sent = {}
     self.auth = nil
+    self.usb = true
+    self.pct = 100
   end
 
   def setup()
@@ -69,7 +75,7 @@ class Calm
 
   def loop()
     self.ticks += 1
-    self.night_mode()
+    self.power_mode()
     if self.auth == nil return end
     if self.ticks % 3 == 0 self.poll() end
     if self.ticks % 5 == 0 self.indicators() end
@@ -84,25 +90,43 @@ class Calm
     return a < b ? (m >= a && m < b) : (m >= a || m < b)
   end
 
-  def night_mode()
-    var want = self.in_night()
-    var was = store.get("night_on", false)
-    shared.set("night", want)
+  def wanted_mode()
+    var night = self.in_night()
+    var battery = store.get("bsave", true) && !self.usb
+    if battery && self.pct < store.get("boff", 10) return "off" end
+    if night && (battery || store.get("nmode", "dim") == "off") return "off" end
+    if night return "dim" end
+    if battery return "save" end
+    return "normal"
+  end
+
+  def power_mode()
+    shared.set("night", self.in_night())
+    var want = self.wanted_mode()
+    var was = store.get("pmode", "normal")
     if want == was return end
-    if want
-      store.set("day_bright", settings.get("brightness"))
-      if store.get("nmode", "dim") == "off"
-        display.power(false)
-      else
-        settings.set("brightness", store.get("nbright", 8))
-      end
-    else
-      display.power(true)
-      var day = store.get("day_bright")
-      if day != nil settings.set("brightness", day) end
+    if was == "normal" store.set("day_bright", settings.get("brightness")) end
+    var day = store.get("day_bright", settings.get("brightness"))
+    display.power(want != "off")
+    if want == "dim" settings.set("brightness", store.get("nbright", 8)) end
+    if want == "save" settings.set("brightness", min(day, store.get("bcap", 40))) end
+    if want == "normal" settings.set("brightness", day) end
+    store.set("pmode", want)
+    log("calm: power " + want)
+  end
+
+  def battery(d)
+    var pct = d.find("batteryPercent")
+    var usb = d.find("usbPower")
+    if pct == nil || usb == nil return end
+    var warn = store.get("bwarn", 20)
+    if !usb && pct < warn && self.pct >= warn
+      notify({"name": "battery", "text": "Battery " + str(pct) + "% - please charge", "textColor": "#E0A040", "durationMs": 8000})
     end
-    store.set("night_on", want)
-    log("calm: night " + (want ? "on" : "off"))
+    self.pct = pct
+    self.usb = usb
+    shared.set("battery", pct)
+    shared.set("usb", usb)
   end
 
   def poll()
@@ -117,6 +141,7 @@ class Calm
     var d = json.load(body)
     if !isinstance(d, map) return end
     shared.set("rssi", d.find("wifiRssi"))
+    self.battery(d)
     var cur = d.find("currentApp", "")
     if cur != self.app
       self.app = cur
