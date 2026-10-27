@@ -234,12 +234,13 @@ class Timer
   def draw()
     clear()
     var t = now_ms()
+    var hide_icon = self.field == "mode" && !self.running() && self.left_ms == 0 && self.elapsed_ms == 0 && !self.ringing && (t / 400) % 3 == 0
     var label
     var progress = -1
     if self.mode == "stopwatch"
       var s = self.elapsed() / 1000
       label = s >= 6000 ? format("%d:%02d", s / 3600, s % 3600 / 60) : format("%02d:%02d", s / 60, s % 60)
-      self.stopwatch(3, 2, CREAM, self.elapsed())
+      if !hide_icon self.stopwatch(3, 2, CREAM, self.elapsed()) end
     else
       var secs = (self.remaining() + 999) / 1000
       label = secs >= 6000 ? format("%d:%02d", secs / 3600, secs % 3600 / 60) : format("%02d:%02d", secs / 60, secs % 60)
@@ -250,14 +251,17 @@ class Timer
           secs = store.get(self.field == "brk" ? "short" : "long", 5) * 60
           label = format("%02d:00", secs / 60)
         end
-        if self.phase == "work" && !edit_brk self.tomato(3, 1, t, self.running()) else self.cup(3, 1, t, self.running()) end
+        if hide_icon
+        elif self.phase == "work" && !edit_brk self.tomato(3, 1, t, self.running())
+        else self.cup(3, 1, t, self.running())
+        end
         var n = store.get("rounds", 4)
         for i : 1 .. n
           var lit = i < self.round || (i == self.round && self.phase != "work") || (edit_brk && self.field == "long")
           pixel(8 - n + i * 2, 14, lit ? AMBER : DARK)
         end
       else
-        self.hourglass(3, 2, CREAM, self.remaining() * 100 / max(self.set_s * 1000, 1), t, self.running())
+        if !hide_icon self.hourglass(3, 2, CREAM, self.remaining() * 100 / max(self.set_s * 1000, 1), t, self.running()) end
       end
     end
     var c = self.running() ? store.get("run", 0xC8643C) : store.get("color", 0xF2D7B6)
@@ -277,9 +281,7 @@ class Timer
     if progress >= 0 rect_fill(x, 15, progress * w / 100, 1, BROWN) end
     if !self.running() && self.left_ms == 0 && self.elapsed_ms == 0 && !self.ringing
       var on = (t / 400) % 3 == 0 ? DARK : 0xF2D7B6
-      if self.field == "mode"
-        rect_fill(2, 15, 11, 1, on)
-      elif size(label) == 5 && self.mode != "stopwatch"
+      if self.field != "mode" && size(label) == 5 && self.mode != "stopwatch"
         rect_fill(self.field == "sec" ? x + 2 * dw + 3 * gap + 2 : x, 15, 2 * dw + gap, 1, on)
       end
     end
