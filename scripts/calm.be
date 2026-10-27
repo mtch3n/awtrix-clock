@@ -13,6 +13,7 @@
 # @config  bcap    number "Brightness on battery" default=40 min=1 max=255 group="Battery"
 # @config  bwarn   number "Warn below" default=20 min=0 max=100 unit=% group="Battery"
 # @config  boff    number "Display off below" default=10 min=0 max=100 unit=% group="Battery"
+# @config  wover   bool   "Weather overlay on all apps" default=false help="Sets the display overlay from the weather (rain, snow, thunder...). Off: the overlay setting stays as you set it" group="Weather"
 # @config  inds    bool   "Indicators"    default=true help="Mail, Slack and alerts (internet, Claude, weather) in the corners" group="Indicators"
 # @config  user    text   "Web login user" default="admin" group="Web login"
 # @config  pass    text   "Web login password" default="" help="Needed for the return and the indicators" group="Web login"
@@ -79,6 +80,7 @@ class Calm
     if self.auth == nil return end
     if self.ticks % 3 == 0 self.poll() end
     if self.ticks % 5 == 0 self.indicators() end
+    if self.ticks % 30 == 0 && store.get("wover", false) self.weather_overlay() end
   end
 
   def in_night()
@@ -158,6 +160,14 @@ class Calm
     self.since = now_ms()
     http.put("http://127.0.0.1/api/v1/apps/active", json.dump({'name': home}),
              / b, st -> nil, {'headers': self.headers()})
+  end
+
+  def weather_overlay()
+    var want = shared.get("Calm.night", false) ? nil : shared.get("Sky.overlay")
+    var key = want == nil ? "none" : want
+    if self.sent.find("overlay") == key return end
+    self.sent["overlay"] = key
+    http.patch("http://127.0.0.1/api/v1/display", json.dump({'overlay': want}), / b, st -> nil, {'headers': self.headers()})
   end
 
   def indicators()

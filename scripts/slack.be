@@ -3,6 +3,8 @@
 # @display 52x16
 # @config  token  text   "User OAuth Token" default="" help="xoxp-... from api.slack.com/apps > OAuth & Permissions"
 # @config  hide   bool   "Hide when nothing is unread" default=true
+# @config  bots   bool   "Count bot and app DMs" default=false
+# @config  days   number "Count messages from the last" default=7 min=1 max=365 unit=days
 import json
 
 var API = "https://slack.com/api/"
@@ -110,6 +112,37 @@ class Slack
     end
   end
 
+  def counts(n, lat)
+    if n <= 0 || !isinstance(lat, map) return 0 end
+    if !store.get("bots", false) && (lat.find("bot_id") != nil || lat.find("subtype") == "bot_message") return 0 end
+    var ts = real(lat.find("ts", "0"))
+    if ts <= store.get("clear_ts", 0) return 0 end
+    if ts < epoch_ms() / 1000.0 - store.get("days", 7) * 86400 return 0 end
+    return n
+  end
+
+  def on_knob(event)
+    if event != "press" return false end
+    self.clear()
+    return true
+  end
+
+  def on_button(btn)
+    if btn != "select" return false end
+    self.clear()
+    return true
+  end
+
+  def clear()
+    store.set("clear_ts", int(epoch_ms() / 1000))
+    for k : self.state.keys() self.state[k] = 0 end
+    self.dms = 0
+    self.mentions = 0
+    self.set_total()
+    self.latest = ""
+    store.set("latest", "")
+  end
+
   def on_info(id, body, status)
     var d = self.ok(body, status)
     if d == nil
@@ -118,7 +151,7 @@ class Slack
     end
     var ch = d.find("channel", {})
     if ch.find("is_im") == true
-      self.record(id, ch.find("unread_count_display", 0), ch.find("latest"))
+      self.record(id, self.counts(ch.find("unread_count_display", 0), ch.find("latest")), ch.find("latest"))
       self.next()
       return
     end
@@ -133,7 +166,7 @@ class Slack
       var msgs = d.find("messages", [])
       var lat = size(msgs) > 0 ? msgs[0] : nil
       var fresh = lat != nil && real(lat.find("ts", "0")) > last_read && lat.find("user") != self.me
-      self.record(id, fresh ? 1 : 0, lat)
+      self.record(id, self.counts(fresh ? 1 : 0, lat), lat)
     end
     self.next()
   end
@@ -214,7 +247,7 @@ class Slack
 
   def mention_check(m, last_read)
     var ts = real(m.find("ts", "0"))
-    if ts <= last_read return end
+    if ts <= last_read || self.counts(1, m) == 0 return end
     self.mcount += 1
     if ts <= self.seen_ts return end
     self.seen_ts = ts
@@ -263,8 +296,8 @@ class Slack
       self.top = "none"
       self.bottom = "All read"
     else
+      self.bottom = self.latest + "   push: mark all read"
       self.top = self.mentions > 0 ? str(self.dms) + " new @" + str(self.mentions) : str(self.unread) + " new"
-      self.bottom = self.latest
     end
   end
 
