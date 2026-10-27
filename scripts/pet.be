@@ -1,8 +1,10 @@
 # @name    Pet
-# @desc    A small Clawd-style pet: follows Claude Code, dresses for the weather and brings new mail and meetings
+# @desc    A small Clawd-style pet: visits now and then, does things, follows Claude Code, dresses for the weather and brings the news
 # @display 52x16
+# @config  visit number "Visit every" default=20 min=0 max=240 unit=min help="0 = never. Only in the day"
 # @config  pop   bool   "Show me when Claude waits" default=true
 # @config  news  bool   "Bring mail, Slack and meetings" default=true
+# @config  hungry number "Hungry after" default=6 min=1 max=48 unit=h
 # @config  lat   number "Latitude"  default=43.6532 min=-90 max=90 step=0.0001 group="Weather"
 # @config  lon   number "Longitude" default=-79.3832 min=-180 max=180 step=0.0001 group="Weather"
 # @config  color color  "Color" default=#D77757
@@ -15,16 +17,27 @@ var LEGS_A = [4, 6, 11, 13]
 var LEGS_B = [3, 5, 12, 14]
 var HEART = [".#.#.", "#####", ".###.", "..#.."]
 var ZED = ["###", ".#.", "###"]
+var NOTE = [".##", ".#.", "##."]
+var COOKIE = [".##.", "#.##", "##.#", ".##."]
 var STALE = 1800
 var DONE_FOR = 60
 var NEWS_FOR = 20000
+var ACT_FOR = 18000
 var CREAM = 0xE8DCCB
 var BROWN = 0x8C7B6B
+var DARK = 0x3A2E26
 var AMBER = 0xE0A040
+var RUST = 0xC8643C
+var BLUE = 0x6FA8DC
+var PINK = 0xE06A6A
+var GREEN = 0x6FAF6A
+var BOUNCE = [0, 2, 3, 2, 0]
+var ACTS = ["laptop", "coffee", "book", "music", "exercise", "ball", "dance", "plant", "hello"]
 
 class Pet
   var x, target, rest_until, last_step, moving, hearts_until, mood, popped
   var wx, wx_ticks, news, seen
+  var act, act_start, act_until, ball_x, ball_dx, ball_t, last_visit, idle_since, eat_until, away_until
 
   def init()
     self.x = 17
@@ -38,12 +51,24 @@ class Pet
     self.wx_ticks = 0
     self.news = nil
     self.seen = {}
+    self.act = nil
+    self.act_start = 0
+    self.act_until = 0
+    self.ball_x = 0
+    self.ball_dx = 1
+    self.ball_t = 0
+    self.last_visit = int(epoch_ms() / 1000)
+    self.idle_since = now_ms()
+    self.eat_until = 0
+    self.away_until = 0
   end
 
   def setup()
+    math.srand(int(epoch_ms() % 100000))
     self.mood = self.claude_mood()
     shared.set("claude", self.mood == "idle" ? nil : self.mood)
     self.popped = false
+    if store.get("fed_at") == nil store.set("fed_at", int(epoch_ms() / 1000)) end
   end
 
   def claude_mood()
@@ -52,6 +77,10 @@ class Pet
     if state == "done" return age < DONE_FOR ? "done" : "idle" end
     if state == "working" || state == "waiting" return age < STALE ? state : "idle" end
     return "idle"
+  end
+
+  def hungry()
+    return int(epoch_ms() / 1000) - store.get("fed_at", 0) > store.get("hungry", 6) * 3600
   end
 
   def loop()
@@ -74,6 +103,49 @@ class Pet
     end
     self.wx_ticks -= 1
     self.check_news(night)
+    self.check_visit(night)
+    if self.act != nil && now_ms() > self.act_until
+      self.act = nil
+      self.idle_since = now_ms()
+      self.rest_until = now_ms() + 2000
+    end
+  end
+
+  def check_visit(night)
+    var every = store.get("visit", 20)
+    var now = int(epoch_ms() / 1000)
+    if night || every <= 0 || self.news != nil || self.mood != "idle" || hour() < 0 return end
+    if now - self.last_visit < every * 60 return end
+    self.last_visit = now
+    self.start_act(self.pick_act())
+    rotation.show()
+  end
+
+  def pick_act()
+    var h = hour()
+    if h >= 6 && h < 10 && math.rand() % 3 == 0 return "coffee" end
+    if h >= 19 && math.rand() % 3 == 0 return "book" end
+    return ACTS[math.rand() % size(ACTS)]
+  end
+
+  def offscreen()
+    return self.x <= -18 || self.x >= width()
+  end
+
+  def start_act(name)
+    if self.offscreen() self.x = self.x < 0 ? 0 : width() - 18 end
+    self.away_until = 0
+    self.act = name
+    self.act_start = now_ms()
+    self.act_until = now_ms() + ACT_FOR
+    if name == "ball"
+      self.ball_x = self.x < 26 ? width() - 4 : 1
+      self.ball_dx = self.x < 26 ? -1 : 1
+    end
+    if name == "laptop" || name == "coffee" || name == "book" || name == "plant"
+      self.target = min(max(self.x, 0), width() - 30)
+      self.x = self.target
+    end
   end
 
   def fetch_weather()
@@ -130,39 +202,87 @@ class Pet
 
   def start_news(kind, label)
     if !store.get("news", true) return end
+    self.act = nil
     self.news = {"kind": kind, "text": label, "until": now_ms() + NEWS_FOR}
     self.x = -18
     self.target = 4
     rotation.show()
   end
 
+  def on_show()
+    self.idle_since = now_ms()
+    if self.away_until > now_ms() + 1500 self.away_until = now_ms() + 1500 end
+  end
+
   def on_knob(event)
-    if event == "left" self.x = max(self.x - 3, 0)
-    elif event == "right" self.x = min(self.x + 3, width() - 18)
+    if event == "left"
+      self.x = max(self.x - 3, 0)
+    elif event == "right"
+      self.x = min(self.x + 3, width() - 18)
     elif event == "press"
       self.hearts_until = now_ms() + 3000
       self.news = nil
-    else return true
+    elif event == "long"
+      self.act = "eat"
+      self.act_start = now_ms()
+      self.act_until = now_ms() + 6000
+      self.eat_until = now_ms() + 6000
+      store.set("fed_at", int(epoch_ms() / 1000))
+    else
+      return true
     end
     self.target = self.x
     self.rest_until = now_ms() + 8000
+    self.idle_since = now_ms()
+    return true
+  end
+
+  def on_button(btn)
+    if btn != "select" return false end
+    self.news = nil
+    self.start_act("ball")
     return true
   end
 
   def walk(t, fast)
-    if self.news != nil
+    var called = self.mood != "idle" || self.act != nil || fast
+    if self.news == nil && called && (self.x < 0 || self.x > width() - 18)
+      self.target = self.x < 0 ? 2 : width() - 20
+      self.away_until = 0
       fast = true
-    elif self.mood != "idle" && !fast
+    elif self.news != nil
+      fast = true
+    elif self.act == "ball"
+      self.target = self.ball_dx > 0 ? self.ball_x - 19 : self.ball_x + 4
+      self.target = min(max(self.target, 0), width() - 18)
+      fast = true
+    elif self.act != nil || (self.mood != "idle" && !fast)
       self.moving = false
       return
     elif t < self.rest_until
       self.moving = false
       return
     end
+    if self.x == self.target && self.news == nil && self.act == nil && self.offscreen()
+      self.moving = false
+      if self.away_until == 0
+        self.away_until = t + 5000 + math.rand() % 15000
+      elif t >= self.away_until
+        self.away_until = 0
+        var left = math.rand() % 2 == 0
+        self.x = left ? -18 : width()
+        self.target = math.rand() % 3 == 0 ? (left ? -9 : width() - 9) : math.rand() % (width() - 17)
+        self.rest_until = t + 2500
+      end
+      return
+    end
     if self.x == self.target
-      if self.news == nil
-        self.target = math.rand() % (width() - 17)
+      if self.news == nil && self.act == nil
+        self.target = math.rand() % 7 == 0 ? (math.rand() % 2 == 0 ? -18 : width()) : math.rand() % (width() - 17)
         self.rest_until = t + 2000 + math.rand() % 5000
+        if t - self.idle_since > 15000 && self.mood == "idle" && math.rand() % 3 == 0
+          self.start_act(self.pick_act())
+        end
       end
       self.moving = false
       return
@@ -199,6 +319,17 @@ class Pet
     var legs = self.moving && (t / 260) % 2 == 1 ? LEGS_B : LEGS_A
     for lx : legs
       rect_fill(x + lx, y + 8, 1, 2, c)
+    end
+  end
+
+  def arms_up(x, y, c, left_up, right_up)
+    if left_up
+      rect_fill(x + 1, y + 4, 2, 2, 0)
+      rect_fill(x + 1, y + 1, 2, 3, c)
+    end
+    if right_up
+      rect_fill(x + 15, y + 4, 2, 2, 0)
+      rect_fill(x + 15, y + 1, 2, 3, c)
     end
   end
 
@@ -257,8 +388,91 @@ class Pet
       pixel(x + 4, y + 2, BROWN)
       pixel(x + 11, y + 2, BROWN)
     elif kind == "hot" && (t / 600) % 2 == 0
-      pixel(x + 16, y + 1, 0x6FA8DC)
+      pixel(x + 16, y + 1, BLUE)
       pixel(x + 16, y + 2, 0x4E6178)
+    end
+  end
+
+  def draw_laptop(x, y, t)
+    rect(x + 20, y, 9, 7, BROWN)
+    for i : 0 .. 2
+      var w = (t / 300 + i * 3) % 6 + 1
+      rect_fill(x + 21, y + 1 + i * 2, w, 1, i == 1 ? AMBER : BLUE)
+    end
+    rect_fill(x + 18, y + 7, 12, 1, CREAM)
+    var tap = (t / 150) % 2
+    pixel(x + 17, y + 6 - tap, store.get("color", 0xD77757))
+  end
+
+  def draw_coffee(x, y, t)
+    var sip = (t / 2500) % 3 == 0
+    var my = sip ? y + 1 : y + 4
+    rect_fill(x + 18, my, 4, 4, CREAM)
+    pixel(x + 22, my + 1, CREAM)
+    pixel(x + 22, my + 2, CREAM)
+    if !sip
+      for i : 0 .. 1
+        var s = (t / 250 + i * 2) % 4
+        pixel(x + 19 + i * 2 + (s % 2), my - 1 - s, 0x6E6A64)
+      end
+    end
+  end
+
+  def draw_book(x, y, t)
+    rect_fill(x + 17, y + 3, 5, 5, CREAM)
+    rect_fill(x + 23, y + 3, 5, 5, CREAM)
+    rect_fill(x + 22, y + 3, 1, 5, BROWN)
+    for i : 0 .. 1
+      rect_fill(x + 18, y + 4 + i * 2, 3, 1, DARK)
+      rect_fill(x + 24, y + 4 + i * 2, 3, 1, DARK)
+    end
+    var flip = (t / 150) % 20
+    if flip < 5 rect_fill(x + 23 - flip, y + 2, 1, 6, 0xF2D7B6) end
+  end
+
+  def draw_music(x, y, t)
+    rect_fill(x + 3, y - 1, 12, 1, BROWN)
+    pixel(x + 2, y, BROWN)
+    pixel(x + 15, y, BROWN)
+    rect_fill(x + 1, y + 1, 2, 3, CREAM)
+    rect_fill(x + 15, y + 1, 2, 3, CREAM)
+    for i : 0 .. 1
+      var rise = (t / 120 + i * 7) % 14
+      self.bitmap(NOTE, x + 18 + i * 5, 10 - rise, i == 0 ? AMBER : CREAM)
+    end
+  end
+
+  def draw_plant(x, y, t)
+    var age = (t - self.act_start) / 1500
+    rect_fill(x + 22, y + 6, 5, 4, BROWN)
+    var h = min(age, 6)
+    if h > 0 rect_fill(x + 24, y + 6 - h, 1, h, GREEN) end
+    if h >= 3
+      pixel(x + 23, y + 4, GREEN)
+      pixel(x + 25, y + 3, GREEN)
+    end
+    if h >= 6
+      pixel(x + 24, y - 1, PINK)
+      pixel(x + 23, y, PINK)
+      pixel(x + 25, y, PINK)
+    end
+    if age < 6
+      rect_fill(x + 17, y + 2, 3, 3, BLUE)
+      var d = (t / 120) % 4
+      pixel(x + 21, y + 3 + d, BLUE)
+    end
+  end
+
+  def draw_eat(x, y, t)
+    var k = t - self.act_start
+    if k < 1500
+      self.bitmap(COOKIE, x + 7, k / 150 - 4, AMBER)
+    elif k < 4500
+      var bite = (k / 300) % 2
+      self.bitmap(COOKIE, x + 7, y - 4, bite == 0 ? AMBER : 0x8A6030)
+      pixel(x + 5 + (k / 200) % 8, y + 9, 0x8A6030)
+    else
+      self.bitmap(HEART, x + 6, 0, PINK)
     end
   end
 
@@ -273,6 +487,10 @@ class Pet
     self.walk(t, soon && !night)
     var y = 6
     if night
+      if self.offscreen() || self.x < 0 || self.x > width() - 18
+        self.x = 17
+        self.target = 17
+      end
       self.sprite(self.x, y, 0x6A3A2C, t, true, false)
       var drift = (t / 600) % 4
       self.bitmap(ZED, self.x + 17, 3 - drift / 2, 0x3050A0)
@@ -282,24 +500,29 @@ class Pet
     var kind = self.wx_kind()
     self.weather_back(kind, t)
     var x = self.x
-    if (kind == "cold" || kind == "snow") && !self.moving x += (t / 90) % 2 end
-    if self.news == nil && self.mood == "working"
-      y = 6 - ((t / 180) % 2)
-      var sx = x + 19
-      var on = (t / 250) % 2 == 0
-      pixel(sx + 1, 1, 0xF0A060)
-      pixel(sx, 2, on ? 0xF0A060 : 0)
-      pixel(sx + 2, 2, on ? 0xF0A060 : 0)
-      pixel(sx + 1, 3, 0xF0A060)
-      pixel(sx + 1, 2, 0xFFE0C0)
-      pixel(x - 2, 2 + (t / 300) % 3, 0x804020)
-    elif self.news == nil && self.mood == "done"
+    var act = self.news == nil ? self.act : nil
+    if act == nil && self.news == nil && self.mood == "working" act = "laptop" end
+    if (kind == "cold" || kind == "snow") && !self.moving && act == nil x += (t / 90) % 2 end
+    var eyes_closed = false
+    var wave = self.news == nil && act == nil && self.mood == "waiting"
+    if act == "music" || act == "dance" y = 6 - ((t / 250) % 2)
+    elif act == "exercise" y = 6 - ((t / 300) % 2) * 2
+    elif act == "ball" && self.moving y = 6 - ((t / 200) % 2)
+    elif act == "eat" eyes_closed = (t - self.act_start) > 1500 && (t - self.act_start) < 4500 && (t / 300) % 2 == 0
+    elif act == "hello" wave = true
+    elif act == nil && self.news == nil && self.mood == "done"
       var jump = (t / 120) % 12
       y = jump < 3 ? 6 - jump : (jump < 6 ? jump + 1 : 6)
-      self.bitmap(HEART, x + 6, 0, 0xE06A6A)
+      self.bitmap(HEART, x + 6, 0, PINK)
     end
-    self.sprite(x, y, c, t, false, self.news == nil && self.mood == "waiting")
-    if self.news == nil || kind != "rain" self.weather_front(kind, x, y, t) end
+    if act == "dance" x += ((t / 250) % 2) * 2 - 1 end
+    self.sprite(x, y, c, t, eyes_closed, wave)
+    if act == "exercise" self.arms_up(x, y, c, (t / 300) % 2 == 0, (t / 300) % 2 == 0)
+    elif act == "dance" self.arms_up(x, y, c, (t / 250) % 2 == 0, (t / 250) % 2 == 1)
+    end
+    if self.news == nil || kind != "rain"
+      if !(act == "music" && kind == "rain") self.weather_front(kind, x, y, t) end
+    end
     if self.news != nil
       if self.news["kind"] == "mail"
         self.envelope(x + 17, y + 3, CREAM)
@@ -313,16 +536,43 @@ class Pet
       scroll_text(0, 6, width(), self.news["text"], 0xF2D7B6)
       return
     end
-    if self.mood == "waiting" && (t / 500) % 2 == 0
+    if act == "laptop" self.draw_laptop(x, y, t)
+    elif act == "coffee" self.draw_coffee(x, y, t)
+    elif act == "book" self.draw_book(x, y, t)
+    elif act == "music" self.draw_music(x, y, t)
+    elif act == "plant" self.draw_plant(x, y, t)
+    elif act == "eat" self.draw_eat(x, y, t)
+    elif act == "hello" text(x + 19, 6, "hi!", 0xF2D7B6)
+    elif act == "dance"
+      for i : 0 .. 2
+        if (t / 200 + i) % 3 == 0 pixel((t / 37 + i * 17) % width(), (t / 53 + i * 5) % 6, AMBER) end
+      end
+    elif act == "ball"
+      if t - self.ball_t >= 70
+        self.ball_t = t
+        self.ball_x += self.ball_dx
+        if self.ball_x <= 0 || self.ball_x >= width() - 3 self.ball_dx = -self.ball_dx end
+      end
+      var by = 12 - BOUNCE[(t / 90) % 5]
+      rect_fill(self.ball_x, by, 3, 3, AMBER)
+      pixel(self.ball_x + 1, by + 1, CREAM)
+    end
+    if self.mood == "waiting" && act == nil && (t / 500) % 2 == 0
       rect_fill(x + 19, 6, 1, 5, AMBER)
       pixel(x + 19, 12, AMBER)
     end
+    if act == nil && self.hungry() && (t / 4000) % 3 == 0
+      pixel(x + 16, y - 1, CREAM)
+      pixel(x + 18, y - 3, CREAM)
+      rect(x + 19, 0, 7, 6, CREAM)
+      self.bitmap(COOKIE, x + 20, 1, AMBER)
+    end
     if t < self.hearts_until
       var rise = (self.hearts_until - t) / 500
-      self.bitmap(HEART, x + 13, rise - 2, 0xE06A6A)
+      self.bitmap(HEART, x + 13, rise - 2, PINK)
       self.bitmap(HEART, x, rise - 4, 0xE89A90)
     end
-    if mail > 0
+    if mail > 0 && act == nil
       self.envelope(self.x < 26 ? 44 : 1, 10, CREAM)
     end
     if soon
