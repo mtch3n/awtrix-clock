@@ -166,14 +166,14 @@ class Calm
     var slack = shared.get("Slack.unread")
     var alert = nil
     if shared.get("Network.up") == false
-      alert = {'color': "#600000", 'blinkMs': 1000}
+      alert = {'color': "#D0503C", 'blinkMs': 1000}
     elif shared.get("Pet.claude") == "waiting"
-      alert = {'color': "#603000", 'fadeMs': 2000}
+      alert = {'color': "#E08040", 'fadeMs': 2000}
     elif shared.get("Sky.alert_type") == "warning" || shared.get("Sky.alert_type") == "watch"
-      alert = {'color': format("#%06X", (shared.get("Sky.alert_color", 0xE0C040) >> 2) & 0x3F3F3F), 'blinkMs': 3000}
+      alert = {'color': format("#%06X", shared.get("Sky.alert_color", 0xE0C040)), 'fadeMs': 3000}
     end
-    self.set_ind(1, on && mail != nil && mail > 0 ? {'color': "#001040"} : nil)
-    self.set_ind(2, on && slack != nil && slack > 0 ? {'color': "#200030"} : nil)
+    self.set_ind(1, on && mail != nil && mail > 0 ? {'color': "#4A80D0", 'fadeMs': 4000} : nil)
+    self.set_ind(2, on && slack != nil && slack > 0 ? {'color': "#A060D0", 'fadeMs': 4000} : nil)
     self.set_ind(3, on ? alert : nil)
   end
 
