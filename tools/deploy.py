@@ -10,7 +10,7 @@ SCRIPTS = {
     "blockfont": "blockfont",
     "sky": "Sky",
     "clock": "Clock",
-    "timer": "Timer",
+    "timer": ["Countdown", "Pomodoro", "Stopwatch"],
     "calm": "Calm",
     "google-calendar": "Google-Calendar",
     "gmail": "Gmail",
@@ -30,9 +30,10 @@ def call(method, path, body=None, content_type="application/json"):
 
 
 def main():
-    for stem, name in SCRIPTS.items():
+    for stem, names in SCRIPTS.items():
         source = (ROOT / "scripts" / f"{stem}.be").read_bytes()
-        print(name, call("PUT", f"/apps/script/{name}", source, "text/plain"))
+        for name in names if isinstance(names, list) else [names]:
+            print(name, call("PUT", f"/apps/script/{name}", source, "text/plain"))
     display = json.loads((ROOT / "settings" / "display.json").read_text())
     print("settings", "ok" if call("PATCH", "/settings", json.dumps(display).encode()) else "failed")
     present = {a["name"] for a in call("GET", "/apps")}

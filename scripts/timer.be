@@ -1,7 +1,7 @@
 # @name    Timer
-# @desc    Countdown, Pomodoro and stopwatch. Select starts, push switches minutes and seconds or pauses, turn to set, hold to reset, hold again to change the mode
+# @desc    Countdown, Pomodoro or stopwatch, one mode per installed copy. Push or select starts and pauses, turn to set, hold to reset
 # @display 52x16
-# @config  mode   select "Start mode" default=countdown options=countdown,pomodoro,stopwatch
+# @config  mode   select "Mode" default=countdown options=countdown,pomodoro,stopwatch
 # @config  start  number "Countdown" default=5 min=1 max=180 unit=min group="Countdown"
 # @config  step   number "Knob step" default=1 min=1 max=30 unit=min group="Countdown"
 # @config  work   number "Focus" default=25 min=5 max=90 unit=min group="Pomodoro"
@@ -18,7 +18,6 @@
 # @config  run    color  "Running" default=#C8643C group="Colors"
 import blockfont
 
-var MODES = ["countdown", "pomodoro", "stopwatch"]
 var TUNES = {"bells": "bells:d=8,o=6,b=140:e,g,e,c,4p,e,g,e,c",
              "chime": "chime:d=4,o=5,b=100:e6,c6,d6,g,2p,g,d6,e6,c6",
              "pips": "pips:d=16,o=6,b=200:c,p,c,p,c,p,c"}
@@ -50,10 +49,6 @@ class Timer
     self.round = 1
     self.field = "min"
     self.set_s = self.mode == "pomodoro" ? store.get("work", 25) * 60 : store.get("start", 5) * 60
-  end
-
-  def is_reset()
-    return !self.running() && self.left_ms == 0 && self.elapsed_ms == 0 && self.phase == "work" && self.round == 1
   end
 
   def running()
@@ -152,10 +147,6 @@ class Timer
     elif event == "press"
       self.toggle()
     elif event == "long"
-      if self.is_reset()
-        self.mode = MODES[(MODES.find(self.mode) + 1) % size(MODES)]
-        store.set("mode", self.mode)
-      end
       self.reset()
     elif (event == "left" || event == "right") && editing && self.field == "sec"
       var m = self.set_s / 60
@@ -263,10 +254,6 @@ class Timer
     if progress >= 0 rect_fill(x, 15, progress * w / 100, 1, BROWN) end
     if self.mode == "countdown" && !self.running() && self.left_ms == 0 && !self.ringing && size(label) == 5
       rect_fill(self.field == "min" ? x : x + 2 * dw + 3 * gap + 2, 15, 2 * dw + gap, 1, (t / 400) % 3 == 0 ? DARK : 0xF2D7B6)
-    end
-    var cur = MODES.find(self.mode)
-    for i : 0 .. 2
-      pixel(width() - 10 + i * 2, 0, i == cur ? 0xF2D7B6 : DARK)
     end
   end
 end
