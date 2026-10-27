@@ -19,8 +19,8 @@ palette ("Warm paper") is used for all apps. A small Clawd-style pet brings the 
 | `scripts/slack.be` | Unread Slack DMs and group DMs and the newest one. Runs on the clock with a user token. |
 | `scripts/network.be` | Public IP, provider, location, HTTPS time to Cloudflare and Wi-Fi signal. Turn the knob for the pages. |
 
-Two apps come from the [AWTRIX Hub](https://awtrix.de) and are not in this repository:
-[Beautiful Weather](https://awtrix.de/script/O3xYAw5TPWWp) and [Pomodoro Timer](https://awtrix.de/script/9B9ojlCGyaxL).
+One app comes from the [AWTRIX Hub](https://awtrix.de) and is not in this repository:
+[Pomodoro Timer](https://awtrix.de/script/9B9ojlCGyaxL).
 
 The apps talk to each other with `shared` values: Calendar shares the next meeting, Gmail and
 Slack share the newest message, Calm shares the night state, and the pet and Calm read them.
@@ -34,7 +34,7 @@ Slack share the newest message, Calm shares the night state, and the pet and Cal
 ## Put it on a clock
 
 1. Install AWTRIX NG on the TC002 and switch on the web login.
-2. Send Beautiful Weather and Pomodoro Timer from the AWTRIX Hub.
+2. Send Pomodoro Timer from the AWTRIX Hub.
 3. Run:
 
     ```sh

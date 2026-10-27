@@ -40,30 +40,6 @@
   "Slack": {
     "hide": true
   },
-  "Beautiful-Weather": {
-    "lang": "English",
-    "lat": 43.6532,
-    "lon": -79.3832,
-    "unit": "C",
-    "view": "auto",
-    "hum": "beside",
-    "hcol": 3258587,
-    "wind": 30,
-    "wunit": "km/h",
-    "cloud": 70,
-    "mcol": 2113696,
-    "ncol": 10518528,
-    "mode": "knob",
-    "psec": 6,
-    "dur": 10,
-    "rain": true,
-    "windp": true,
-    "fcst": true,
-    "sunp": true,
-    "moon": true,
-    "hold": 20,
-    "mdark": 0
-  },
   "Network": {
     "every": 10,
     "slow": 150
