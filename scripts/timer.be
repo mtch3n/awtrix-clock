@@ -143,7 +143,7 @@ class Timer
       return true
     end
     var editing = !self.running() && self.left_ms == 0 && self.elapsed_ms == 0
-    var fields = self.mode == "countdown" ? ["mode", "min", "sec"] : (self.mode == "pomodoro" ? ["mode", "min"] : ["mode"])
+    var fields = self.mode == "countdown" ? ["mode", "min", "sec"] : (self.mode == "pomodoro" ? ["mode", "min", "brk", "long"] : ["mode"])
     if event == "press" && editing
       self.field = fields[((fields.find(self.field) == nil ? 0 : fields.find(self.field)) + 1) % size(fields)]
     elif event == "press"
@@ -157,6 +157,14 @@ class Timer
     elif event == "long"
       self.reset()
       self.field = "mode"
+    elif (event == "left" || event == "right") && editing && self.mode == "pomodoro" && (self.field == "brk" || self.field == "long")
+      var key = self.field == "brk" ? "short" : "long"
+      var v = store.get(key, self.field == "brk" ? 5 : 15) + (event == "right" ? 1 : -1)
+      store.set(key, min(max(v, 1), 60))
+    elif (event == "left" || event == "right") && editing && self.mode == "pomodoro" && self.field == "min"
+      var v = store.get("work", 25) + (event == "right" ? 1 : -1)
+      store.set("work", min(max(v, 5), 90))
+      self.set_s = store.get("work") * 60
     elif (event == "left" || event == "right") && editing && self.field == "sec" && self.mode == "countdown"
       var m = self.set_s / 60
       var sec = (self.set_s % 60 + (event == "right" ? 1 : 59)) % 60
@@ -237,10 +245,16 @@ class Timer
       label = secs >= 6000 ? format("%d:%02d", secs / 3600, secs % 3600 / 60) : format("%02d:%02d", secs / 60, secs % 60)
       if self.running() || self.left_ms > 0 progress = (self.set_s * 1000 - self.remaining()) * 100 / max(self.set_s * 1000, 1) end
       if self.mode == "pomodoro"
-        if self.phase == "work" self.tomato(3, 1, t, self.running()) else self.cup(3, 1, t, self.running()) end
+        var edit_brk = !self.running() && self.left_ms == 0 && (self.field == "brk" || self.field == "long")
+        if edit_brk
+          secs = store.get(self.field == "brk" ? "short" : "long", 5) * 60
+          label = format("%02d:00", secs / 60)
+        end
+        if self.phase == "work" && !edit_brk self.tomato(3, 1, t, self.running()) else self.cup(3, 1, t, self.running()) end
         var n = store.get("rounds", 4)
         for i : 1 .. n
-          pixel(8 - n + i * 2, 14, i < self.round || (i == self.round && self.phase != "work") ? AMBER : DARK)
+          var lit = i < self.round || (i == self.round && self.phase != "work") || (edit_brk && self.field == "long")
+          pixel(8 - n + i * 2, 14, lit ? AMBER : DARK)
         end
       else
         self.hourglass(3, 2, CREAM, self.remaining() * 100 / max(self.set_s * 1000, 1), t, self.running())
@@ -266,7 +280,7 @@ class Timer
       if self.field == "mode"
         rect_fill(2, 15, 11, 1, on)
       elif size(label) == 5 && self.mode != "stopwatch"
-        rect_fill(self.field == "min" ? x : x + 2 * dw + 3 * gap + 2, 15, 2 * dw + gap, 1, on)
+        rect_fill(self.field == "sec" ? x + 2 * dw + 3 * gap + 2 : x, 15, 2 * dw + gap, 1, on)
       end
     end
   end
