@@ -1,0 +1,17 @@
+{
+  "order": [
+    "Time",
+    "Pet",
+    "Google-Calendar",
+    "Gmail",
+    "Slack",
+    "Beautiful-Weather",
+    "Network",
+    "Pomodoro-Timer",
+    "Status",
+    "Calm"
+  ],
+  "disabled": [
+    "Status"
+  ]
+}

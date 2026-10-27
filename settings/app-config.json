@@ -1,0 +1,78 @@
+{
+  "Pet": {
+    "pop": true,
+    "news": true,
+    "lat": 43.6532,
+    "lon": -79.3832,
+    "color": 14120791
+  },
+  "Google-Calendar": {
+    "cal": "primary",
+    "ahead": 72,
+    "every": 5,
+    "allday": false,
+    "tint": 13132860
+  },
+  "Gmail": {
+    "every": 2,
+    "note": false,
+    "sound": false,
+    "hide": true
+  },
+  "Slack": {
+    "hide": true
+  },
+  "Beautiful-Weather": {
+    "lang": "English",
+    "lat": 43.6532,
+    "lon": -79.3832,
+    "unit": "C",
+    "view": "auto",
+    "hum": "beside",
+    "hcol": 3258587,
+    "wind": 30,
+    "wunit": "km/h",
+    "cloud": 70,
+    "mcol": 2113696,
+    "ncol": 10518528,
+    "mode": "knob",
+    "psec": 6,
+    "dur": 10,
+    "rain": true,
+    "windp": true,
+    "fcst": true,
+    "sunp": true,
+    "moon": true,
+    "hold": 20,
+    "mdark": 0
+  },
+  "Network": {
+    "every": 10,
+    "slow": 150
+  },
+  "Pomodoro-Timer": {
+    "work": 25,
+    "short": 5,
+    "long": 15,
+    "cycles": 4,
+    "auto": false,
+    "tune": "chime",
+    "ring": 20,
+    "secs": false,
+    "pin": true,
+    "sound": true,
+    "wake": true
+  },
+  "Calm": {
+    "back": 60,
+    "home": "Time",
+    "keep": "Pomodoro-Timer",
+    "night": true,
+    "nfrom": "22:30",
+    "nto": "07:00",
+    "nmode": "dim",
+    "nbright": 8,
+    "inds": true,
+    "user": "admin"
+  }
+}
