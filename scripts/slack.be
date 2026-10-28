@@ -60,7 +60,7 @@ class Slack
 
   def loop()
     self.update_labels()
-    if store.get("token", "") == "" || self.busy return end
+    if store.get("token", "") == "" || self.busy || shared.get("Calm.quiet", false) return end
     if self.wait > 0
       self.wait -= 1
       return

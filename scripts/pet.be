@@ -46,7 +46,7 @@ class Pet
   var act, act_start, act_until, ball_x, ball_dx, ball_t, last_visit, idle_since, eat_until, away_until
   var hide, hide_until, pending_hide, yoff, yoff_target, yoff_t, look, say, say_until, duck_until, jump_until, hang
   var ev, ev_start, ev_x, flip_now, land_until
-  var depth, depth_start, depth_until, far_x, far_target, far_step
+  var depth, depth_start, depth_until, far_x, far_target, far_step, was_quiet
 
   def init()
     self.x = 17
@@ -91,6 +91,7 @@ class Pet
     self.far_x = 0
     self.far_target = 0
     self.far_step = 0
+    self.was_quiet = false
   end
 
   def start_depth(kind)
@@ -143,6 +144,14 @@ class Pet
         if self.mood == "waiting" || self.mood == "done" rotation.show() end
       end
     end
+    var quiet = shared.get("Calm.quiet", false)
+    if self.was_quiet && !quiet && hour() >= 0
+      self.x = 17
+      self.target = 17
+      self.start_ev("wake")
+      rotation.show()
+    end
+    self.was_quiet = quiet
     var m = self.claude_mood()
     if m != self.mood
       self.mood = m

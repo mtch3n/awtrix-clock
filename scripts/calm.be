@@ -4,6 +4,10 @@
 # @config  back    number "Back to the clock after" default=60 min=0 max=3600 unit=s help="0 = never" group="Return"
 # @config  home    text   "Clock app"     default="Time" group="Return"
 # @config  keep    text   "Never leave"   default="Pomodoro-Timer,Timer" help="Apps that stay, separated by commas" group="Return"
+# @config  quiet   bool   "Quiet time" default=true help="Display off and all apps paused" group="Quiet time"
+# @config  qfrom   text   "Quiet from"    default="00:00" group="Quiet time"
+# @config  qto     text   "Quiet until"   default="06:00" group="Quiet time"
+# @config  qwake   number "Wake on a button for" default=3 min=1 max=30 unit=min help="A button push (LEFT or RIGHT) wakes the clock for this long" group="Quiet time"
 # @config  night   bool   "Night mode"    default=true group="Night"
 # @config  nfrom   text   "Night from"    default="22:30" group="Night"
 # @config  nto     text   "Night until"   default="07:00" group="Night"
@@ -53,7 +57,7 @@ def b64(s)
 end
 
 class Calm
-  var ticks, app, since, sent, auth, usb, pct
+  var ticks, app, since, sent, auth, usb, pct, wake_until
 
   def init()
     self.ticks = 0
@@ -63,6 +67,7 @@ class Calm
     self.auth = nil
     self.usb = true
     self.pct = 100
+    self.wake_until = 0
   end
 
   def setup()
@@ -78,9 +83,27 @@ class Calm
     self.ticks += 1
     self.power_mode()
     if self.auth == nil return end
-    if self.ticks % (shared.get("eco", false) ? 10 : 3) == 0 self.poll() end
+    if self.ticks % (shared.get("eco", false) && !shared.get("quiet", false) ? 10 : 3) == 0 self.poll() end
     if self.ticks % 5 == 0 self.indicators() end
     if self.ticks % 30 == 0 && store.get("wover", false) self.weather_overlay() end
+  end
+
+  def in_window(from, to)
+    if hour() < 0 return false end
+    var a = hhmm(from)
+    var b = hhmm(to)
+    if a < 0 || b < 0 || a == b return false end
+    var m = hour() * 60 + minute()
+    return a < b ? (m >= a && m < b) : (m >= a || m < b)
+  end
+
+  def in_quiet()
+    if !store.get("quiet", true) || !self.in_window(store.get("qfrom", "00:00"), store.get("qto", "06:00")) return false end
+    return now_ms() > self.wake_until
+  end
+
+  def wake()
+    self.wake_until = now_ms() + store.get("qwake", 3) * 60000
   end
 
   def in_night()
@@ -95,6 +118,7 @@ class Calm
   def wanted_mode()
     var night = self.in_night()
     var battery = store.get("bsave", true) && !self.usb
+    if self.in_quiet() return "off" end
     if battery && self.pct < store.get("boff", 10) return "off" end
     if night && (battery || store.get("nmode", "dim") == "off") return "off" end
     if night return "dim" end
@@ -103,7 +127,8 @@ class Calm
   end
 
   def power_mode()
-    shared.set("night", self.in_night())
+    shared.set("night", self.in_night() || self.in_quiet())
+    shared.set("quiet", self.in_quiet())
     var want = self.wanted_mode()
     var was = store.get("pmode", "normal")
     if want == was return end
@@ -171,6 +196,7 @@ class Calm
     self.battery(d)
     var cur = d.find("currentApp", "")
     if cur != self.app
+      if self.app != "" && store.get("quiet", true) && self.in_window(store.get("qfrom", "00:00"), store.get("qto", "06:00")) self.wake() end
       self.app = cur
       self.since = now_ms()
       return
@@ -183,6 +209,7 @@ class Calm
     end
     if now_ms() - self.since < back * 1000 return end
     self.since = now_ms()
+    self.app = home
     http.put("http://127.0.0.1/api/v1/apps/active", json.dump({'name': home}),
              / b, st -> nil, {'headers': self.headers()})
   end

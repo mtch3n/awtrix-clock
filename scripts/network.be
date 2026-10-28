@@ -27,6 +27,7 @@ class Network
   end
 
   def loop()
+    if shared.get("Calm.quiet", false) return end
     if self.ticks <= 0
       self.ticks = shared.get("Calm.eco", false) ? 3600 : store.get("every", 10) * 60
       self.check()

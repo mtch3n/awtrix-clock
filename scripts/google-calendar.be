@@ -92,7 +92,7 @@ class GoogleCalendar
   end
 
   def loop()
-    if hour() < 0 || !oauth.ready()
+    if hour() < 0 || !oauth.ready() || shared.get("Calm.quiet", false)
       self.update_labels()
       return
     end

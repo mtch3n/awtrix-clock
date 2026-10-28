@@ -30,6 +30,7 @@ class Sky
   end
 
   def loop()
+    if shared.get("Calm.quiet", false) return end
     self.wx_ticks -= 1
     self.alert_ticks -= 1
     if self.wx_ticks <= 0
