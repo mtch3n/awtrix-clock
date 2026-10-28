@@ -129,6 +129,11 @@ class Calm
     self.usb = usb
     shared.set("battery", pct)
     shared.set("usb", usb)
+    shared.set("volts", d.find("batteryVoltage"))
+    shared.set("uptime", d.find("uptimeSeconds"))
+    shared.set("heap", d.find("freeHeapBytes"))
+    shared.set("version", d.find("version"))
+    shared.set("reset", d.find("resetReason"))
   end
 
   def poll()

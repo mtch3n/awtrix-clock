@@ -16,6 +16,7 @@ SCRIPTS = {
     "gmail": "Gmail",
     "slack": "Slack",
     "network": "Network",
+    "device": "Device",
     "pet": "Pet",
 }
 
