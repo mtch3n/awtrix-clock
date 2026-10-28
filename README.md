@@ -17,7 +17,7 @@ palette ("Warm paper") is used for all apps. A small Clawd-style pet brings the 
 | `scripts/google-calendar.be` | The current or next event with a countdown. Turn the knob for the next events. |
 | `scripts/gmail.be` | Unread mail in the inbox and the newest sender and subject. Hides itself when the inbox is read. |
 | `scripts/slack.be` | Unread Slack DMs and group DMs and the newest one. Runs on the clock with a user token. |
-| `scripts/device.be` | Battery (a shaded battery that fills, the percent and a bolt while it charges) and system state (uptime, firmware, free memory, voltage, last restart reason). Turn the knob for the pages. Calm shares the values. |
+| `scripts/device.be` | Four pages, one big value each: battery (a shaded battery that fills, a bolt while it charges), uptime, free memory, and firmware with voltage and the last restart reason. Turn the knob for the pages. Calm shares the values. |
 | `scripts/network.be` | Public IP, provider, location, HTTPS time to Cloudflare and Wi-Fi signal. Turn the knob for the pages. |
 
 
