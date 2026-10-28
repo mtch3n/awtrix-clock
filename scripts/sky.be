@@ -1,5 +1,7 @@
 # @name    Sky
 # @desc    Weather from Open-Meteo and Environment Canada alerts for one place, shared with the other apps
+# @author  mtch3n
+# @version 1.0
 # @headless true
 # @config  lat    number "Latitude"  default=43.6532 min=-90 max=90 step=0.0001
 # @config  lon    number "Longitude" default=-79.3832 min=-180 max=180 step=0.0001

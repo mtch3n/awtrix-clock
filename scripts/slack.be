@@ -1,5 +1,7 @@
 # @name    Slack
 # @desc    Unread Slack DMs, group DMs and @mentions, and the newest one
+# @author  mtch3n
+# @version 1.0
 # @display 52x16
 # @config  token  text   "User OAuth Token" default="" help="xoxp-... from api.slack.com/apps > OAuth & Permissions"
 # @config  hide   bool   "Hide when nothing is unread" default=true
@@ -161,6 +163,26 @@ class Slack
   end
 
   def on_info(id, body, status)
+    if status == 200 && body != nil && re.search("\"ok\":true", body) != nil
+      if re.search("\"is_im\":true", body) != nil
+        var m = re.search("\"unread_count_display\":(\\d+)", body)
+        if m == nil || int(m[1]) == 0
+          self.status = 200
+          self.record(id, 0, nil)
+          self.next()
+          return
+        end
+      else
+        var lr = re.search("\"last_read\":\"([0-9.]+)\"", body)
+        if lr != nil
+          self.status = 200
+          var last_read = real(lr[1])
+          http.get(API + "conversations.history?channel=" + id + "&limit=1",
+                   / b, st -> self.on_history(id, last_read, b, st), self.opts())
+          return
+        end
+      end
+    end
     var d = self.ok(body, status)
     if d == nil
       self.next()
@@ -178,6 +200,16 @@ class Slack
   end
 
   def on_history(id, last_read, body, status)
+    if status == 200 && body != nil
+      var ts = re.search("\"ts\":\"([0-9.]+)\"", body)
+      var user = re.search("\"user\":\"(\\w+)\"", body)
+      if ts != nil && (real(ts[1]) <= last_read || (user != nil && user[1] == self.me))
+        self.status = 200
+        self.record(id, 0, nil)
+        self.next()
+        return
+      end
+    end
     var d = self.ok(body, status)
     if d != nil
       var msgs = d.find("messages", [])

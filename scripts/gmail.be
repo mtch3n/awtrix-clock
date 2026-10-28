@@ -1,5 +1,7 @@
 # @name    Gmail
 # @desc    Unread mail in the inbox, the newest sender and subject, and a quiet note for new mail
+# @author  mtch3n
+# @version 1.0
 # @display 52x16
 # @oauth authorize=https://accounts.google.com/o/oauth2/v2/auth token=https://oauth2.googleapis.com/token api=gmail.googleapis.com scope="https://www.googleapis.com/auth/gmail.metadata" params="access_type=offline prompt=consent"
 # @config  every  number "Refresh" default=2 min=1 max=60 unit=min

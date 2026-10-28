@@ -1,5 +1,7 @@
 # @module
 # @desc  Block digits in any size (w wide, h high) with separate side (sv) and bar (sh) strokes, for Clock and Timer
+# @author  mtch3n
+# @version 1.0
 
 var blockfont = module("blockfont")
 
@@ -45,11 +47,10 @@ blockfont.digit = def (ch, x, y, c, sv, sh, w, h)
   end
 end
 
+var STYLES = {"bold": [6, 2, 2], "thin": [6, 1, 1], "compact": [5, 2, 2], "airy": [6, 1, 2]}
+
 blockfont.style = def (name)
-  if name == "bold" return [6, 2, 2] end
-  if name == "thin" return [6, 1, 1] end
-  if name == "compact" return [5, 2, 2] end
-  return [6, 1, 2]
+  return STYLES.find(name, STYLES["airy"])
 end
 
 blockfont.width = def (str, w, gap)

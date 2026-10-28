@@ -1,5 +1,7 @@
 # @name    Pet
 # @desc    A small Clawd-style pet: visits now and then, does things, follows Claude Code, dresses for the weather and brings the news
+# @author  mtch3n
+# @version 1.0
 # @display 52x16
 # @config  visit number "Visit every" default=15 min=0 max=240 unit=min help="0 = never. Only in the day"
 # @config  pop   bool   "Show me when Claude waits" default=true
@@ -46,7 +48,7 @@ class Pet
   var act, act_start, act_until, ball_x, ball_dx, ball_t, last_visit, idle_since, eat_until, away_until
   var hide, hide_until, pending_hide, yoff, yoff_target, yoff_t, look, say, say_until, duck_until, jump_until, hang
   var ev, ev_start, ev_x, flip_now, land_until
-  var depth, depth_start, depth_until, far_x, far_target, far_step, was_quiet
+  var depth, depth_start, depth_until, far_x, far_target, far_step, was_quiet, soon_s
 
   def init()
     self.x = 17
@@ -152,6 +154,8 @@ class Pet
       rotation.show()
     end
     self.was_quiet = quiet
+    var nm = shared.get("Google-Calendar.next_min")
+    self.soon_s = nm == nil ? "" : str(nm) + "m"
     var m = self.claude_mood()
     if m != self.mood
       self.mood = m
@@ -1032,7 +1036,7 @@ class Pet
       self.envelope(self.x < 26 ? 44 : 1, 10, CREAM)
     end
     if soon
-      var label = str(next) + "m"
+      var label = self.soon_s
       text(width() - text_width(label), 6, label, AMBER)
     end
   end

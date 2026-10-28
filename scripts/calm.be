@@ -1,5 +1,7 @@
 # @name    Calm
 # @desc    Night mode, battery saving, return to the clock after a delay, and the corner indicators
+# @author  mtch3n
+# @version 1.0
 # @headless true
 # @config  back    number "Back to the clock after" default=60 min=0 max=3600 unit=s help="0 = never" group="Return"
 # @config  home    text   "Clock app"     default="Time" group="Return"

@@ -1,5 +1,7 @@
 # @name    Timer
 # @desc    Countdown, Pomodoro and stopwatch. Stopped: push moves the selection (mode, minutes, seconds), turn changes it. Select starts and pauses, hold resets
+# @author  mtch3n
+# @version 1.0
 # @display 52x16
 # @config  mode   select "First mode" default=countdown options=countdown,pomodoro,stopwatch
 # @config  start  number "Countdown" default=5 min=1 max=180 unit=min group="Countdown"
@@ -34,7 +36,7 @@ var DIAL = [[0, -5, 0, 0, 100], [0, -4, 0, 1, 100], [0, -3, 0, 1, 100], [0, -2, 
 var TOMATO = [[-2, -5, 0x905143], [-1, -5, 0xD77A64], [0, -5, 0xF08870], [1, -5, 0xBB4835], [2, -5, 0x7C3024], [-4, -4, 0x351E19], [-3, -4, 0xF08870], [-2, -4, 0xF08870], [-1, -4, 0xF08870], [0, -4, 0xD0503C], [1, -4, 0xD0503C], [2, -4, 0xD0503C], [3, -4, 0xD0503C], [4, -4, 0x2E120D], [-4, -3, 0xF08870], [-3, -3, 0xF08870], [-2, -3, 0xF08870], [-1, -3, 0xD0503C], [0, -3, 0xD0503C], [1, -3, 0xD0503C], [2, -3, 0xD0503C], [3, -3, 0xD0503C], [4, -3, 0xD0503C], [-5, -2, 0x905143], [-4, -2, 0xF08870], [-3, -2, 0xF08870], [-2, -2, 0xD0503C], [-1, -2, 0xD0503C], [0, -2, 0xD0503C], [1, -2, 0xD0503C], [2, -2, 0xD0503C], [3, -2, 0xD0503C], [4, -2, 0xD0503C], [5, -2, 0x7C3024], [-5, -1, 0xD77A64], [-4, -1, 0xF08870], [-3, -1, 0xD0503C], [-2, -1, 0xD0503C], [-1, -1, 0xD0503C], [0, -1, 0xD0503C], [1, -1, 0xD0503C], [2, -1, 0xD0503C], [3, -1, 0xD0503C], [4, -1, 0xD0503C], [5, -1, 0xBB4835], [-5, 0, 0xF08870], [-4, 0, 0xD0503C], [-3, 0, 0xD0503C], [-2, 0, 0xD0503C], [-1, 0, 0xD0503C], [0, 0, 0xD0503C], [1, 0, 0xD0503C], [2, 0, 0xD0503C], [3, 0, 0xD0503C], [4, 0, 0xD0503C], [5, 0, 0x9A3424], [-5, 1, 0xBB4835], [-4, 1, 0xD0503C], [-3, 1, 0xD0503C], [-2, 1, 0xD0503C], [-1, 1, 0xD0503C], [0, 1, 0xD0503C], [1, 1, 0xD0503C], [2, 1, 0xD0503C], [3, 1, 0xD0503C], [4, 1, 0x9A3424], [5, 1, 0x8A2E20], [-5, 2, 0x7C3024], [-4, 2, 0xD0503C], [-3, 2, 0xD0503C], [-2, 2, 0xD0503C], [-1, 2, 0xD0503C], [0, 2, 0xD0503C], [1, 2, 0xD0503C], [2, 2, 0xD0503C], [3, 2, 0x9A3424], [4, 2, 0x9A3424], [5, 2, 0x5C1F15], [-4, 3, 0xD0503C], [-3, 3, 0xD0503C], [-2, 3, 0xD0503C], [-1, 3, 0xD0503C], [0, 3, 0xD0503C], [1, 3, 0xD0503C], [2, 3, 0x9A3424], [3, 3, 0x9A3424], [4, 3, 0x9A3424], [-4, 4, 0x2E120D], [-3, 4, 0xD0503C], [-2, 4, 0xD0503C], [-1, 4, 0xD0503C], [0, 4, 0xD0503C], [1, 4, 0x9A3424], [2, 4, 0x9A3424], [3, 4, 0x9A3424], [4, 4, 0x220B08], [-2, 5, 0x7C3024], [-1, 5, 0xBB4835], [0, 5, 0x9A3424], [1, 5, 0x8A2E20], [2, 5, 0x5C1F15]]
 
 class Timer
-  var mode, set_s, end_ms, left_ms, started_ms, elapsed_ms, ringing, ring_until, last_tone, phase, round, field
+  var mode, set_s, end_ms, left_ms, started_ms, elapsed_ms, ringing, ring_until, last_tone, phase, round, field, lsec, lstr
 
   def init()
     self.mode = store.get("last_mode", store.get("mode", "countdown"))
@@ -269,6 +271,13 @@ class Timer
     end
   end
 
+  def label(secs)
+    if secs == self.lsec return self.lstr end
+    self.lsec = secs
+    self.lstr = secs >= 6000 ? format("%d:%02d", secs / 3600, secs % 3600 / 60) : format("%02d:%02d", secs / 60, secs % 60)
+    return self.lstr
+  end
+
   def draw()
     clear()
     var t = now_ms()
@@ -279,18 +288,16 @@ class Timer
     var label
     var progress = -1
     if self.mode == "stopwatch"
-      var s = self.elapsed() / 1000
-      label = s >= 6000 ? format("%d:%02d", s / 3600, s % 3600 / 60) : format("%02d:%02d", s / 60, s % 60)
+      label = self.label(self.elapsed() / 1000)
       if !hide_icon self.stopwatch(2, dy, dh, CREAM, self.elapsed()) end
     else
       var secs = (self.remaining() + 999) / 1000
-      label = secs >= 6000 ? format("%d:%02d", secs / 3600, secs % 3600 / 60) : format("%02d:%02d", secs / 60, secs % 60)
+      label = self.label(secs)
       if self.running() || self.left_ms > 0 progress = (self.set_s * 1000 - self.remaining()) * 100 / max(self.set_s * 1000, 1) end
       if self.mode == "pomodoro"
         var edit_brk = !self.running() && self.left_ms == 0 && (self.field == "brk" || self.field == "long")
         if edit_brk
-          secs = store.get(self.field == "brk" ? "short" : "long", 5) * 60
-          label = format("%02d:00", secs / 60)
+          label = self.label(store.get(self.field == "brk" ? "short" : "long", 5) * 60)
         end
         if hide_icon
         elif self.phase == "work" && !edit_brk self.focus_icon(2, dy, dh, t, self.running())

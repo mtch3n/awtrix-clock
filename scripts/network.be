@@ -1,5 +1,7 @@
 # @name    Network
 # @desc    Public IP, provider, location, latency and Wi-Fi. Turn the knob for the pages
+# @author  mtch3n
+# @version 1.0
 # @display 52x16
 # @config  every  number "Refresh" default=10 min=1 max=120 unit=min
 # @config  slow   number "Slow from" default=400 min=50 max=5000 unit=ms help="Time for one HTTPS request to Cloudflare"

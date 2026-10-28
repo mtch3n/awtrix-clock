@@ -1,5 +1,7 @@
 # @name    Google Calendar
 # @desc    The current or next event of a Google Calendar: start time, countdown and title
+# @author  mtch3n
+# @version 1.0
 # @display 52x16
 # @oauth authorize=https://accounts.google.com/o/oauth2/v2/auth token=https://oauth2.googleapis.com/token api=www.googleapis.com scope="https://www.googleapis.com/auth/calendar.readonly" params="access_type=offline prompt=consent"
 # @config  cal     text   "Calendar ID" default="primary" help="primary, or the calendar's ID from Google Calendar settings"
