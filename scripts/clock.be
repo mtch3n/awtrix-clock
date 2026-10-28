@@ -24,7 +24,7 @@ import blockfont
 var DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 var AMBER = 0xE0A040
-var CLOUD = ["....LLLL....", "..LLLLLLLL..", ".LLLLLLLLLS.", "LLLLLLLLLLSS", "LLLLLLLLLLLS", ".SSSSSSSSSS."]
+var WICONS = {"sun": [13, 13, [[4, 3, 0x937E49], [5, 3, 0xF6D27A], [6, 3, 0xF6D27A], [7, 3, 0xF6D27A], [8, 3, 0x866026], [3, 4, 0x937E49], [4, 4, 0xF6D27A], [5, 4, 0xF6D27A], [6, 4, 0xF6D27A], [7, 4, 0xE0A040], [8, 4, 0xE0A040], [9, 4, 0x866026], [3, 5, 0xF6D27A], [4, 5, 0xF6D27A], [5, 5, 0xF6D27A], [6, 5, 0xE0A040], [7, 5, 0xE0A040], [8, 5, 0xE0A040], [9, 5, 0xE0A040], [3, 6, 0xF6D27A], [4, 6, 0xF6D27A], [5, 6, 0xE0A040], [6, 6, 0xE0A040], [7, 6, 0xE0A040], [8, 6, 0xE0A040], [9, 6, 0xB8742A], [3, 7, 0xF6D27A], [4, 7, 0xE0A040], [5, 7, 0xE0A040], [6, 7, 0xE0A040], [7, 7, 0xE0A040], [8, 7, 0xB8742A], [9, 7, 0xB8742A], [3, 8, 0x866026], [4, 8, 0xE0A040], [5, 8, 0xE0A040], [6, 8, 0xE0A040], [7, 8, 0xB8742A], [8, 8, 0xB8742A], [9, 8, 0x6E4519], [4, 9, 0x866026], [5, 9, 0xE0A040], [6, 9, 0xB8742A], [7, 9, 0xB8742A], [8, 9, 0x6E4519], [6, 1, 0xE0A040], [6, 0, 0xB8742A], [11, 6, 0xE0A040], [12, 6, 0xB8742A], [6, 11, 0xE0A040], [6, 12, 0xB8742A], [1, 6, 0xE0A040], [0, 6, 0xB8742A], [10, 2, 0xE0A040], [11, 1, 0xB8742A], [10, 10, 0xE0A040], [11, 11, 0xB8742A], [2, 10, 0xE0A040], [1, 11, 0xB8742A], [2, 2, 0xE0A040], [1, 1, 0xB8742A]]], "moon": [10, 11, [[4, 0, 0x635F58], [2, 1, 0x9E998D], [3, 1, 0xF4ECDA], [4, 1, 0x4F4C46], [1, 2, 0x9E998D], [2, 2, 0xF4ECDA], [3, 2, 0xF4ECDA], [1, 3, 0xF4ECDA], [2, 3, 0xF4ECDA], [3, 3, 0xEDE6D4], [0, 4, 0x76736A], [1, 4, 0xF4ECDA], [2, 4, 0xF4ECDA], [3, 4, 0xEDE6D4], [0, 5, 0x9E998D], [1, 5, 0xF4ECDA], [2, 5, 0xF4ECDA], [3, 5, 0xF4ECDA], [0, 6, 0x76736A], [1, 6, 0xF4ECDA], [2, 6, 0xF4ECDA], [3, 6, 0xF4ECDA], [4, 6, 0xDAD2C2], [1, 7, 0xF4ECDA], [2, 7, 0xF4ECDA], [3, 7, 0xF4ECDA], [4, 7, 0xF4ECDA], [5, 7, 0xD2C6B1], [1, 8, 0x9E998D], [2, 8, 0xF4ECDA], [3, 8, 0xF4ECDA], [4, 8, 0xD8CCB6], [5, 8, 0xD8CCB6], [6, 8, 0xD8CCB6], [7, 8, 0xD8CCB6], [8, 8, 0xD8CCB6], [9, 8, 0x8C8476], [2, 9, 0x9E998D], [3, 9, 0xD8CCB6], [4, 9, 0xD8CCB6], [5, 9, 0xD8CCB6], [6, 9, 0xD8CCB6], [7, 9, 0xD8CCB6], [8, 9, 0x8C8476], [4, 10, 0x696358], [5, 10, 0x8C8476], [6, 10, 0x696358]]], "partly": [12, 8, [[8, 0, 0xF6D27A], [9, 0, 0xF6D27A], [10, 0, 0xE0A040], [7, 1, 0xF6D27A], [8, 1, 0xF6D27A], [9, 1, 0xE0A040], [10, 1, 0xE0A040], [11, 1, 0xB8742A], [4, 2, 0xF6F0E6], [5, 2, 0xF6F0E6], [6, 2, 0xF6F0E6], [7, 2, 0xF6F0E6], [8, 2, 0xE0A040], [9, 2, 0xE0A040], [10, 2, 0xB8742A], [11, 2, 0xB8742A], [2, 3, 0xF6F0E6], [3, 3, 0xF6F0E6], [4, 3, 0xE0D6C6], [5, 3, 0xE0D6C6], [6, 3, 0xE0D6C6], [7, 3, 0xE0D6C6], [8, 3, 0xF6F0E6], [9, 3, 0xF6F0E6], [10, 3, 0xB8742A], [1, 4, 0xF6F0E6], [2, 4, 0xE0D6C6], [3, 4, 0xE0D6C6], [4, 4, 0xE0D6C6], [5, 4, 0xE0D6C6], [6, 4, 0xE0D6C6], [7, 4, 0xE0D6C6], [8, 4, 0xE0D6C6], [9, 4, 0xE0D6C6], [10, 4, 0x958B80], [0, 5, 0xF6F0E6], [1, 5, 0xE0D6C6], [2, 5, 0xE0D6C6], [3, 5, 0xE0D6C6], [4, 5, 0xE0D6C6], [5, 5, 0xE0D6C6], [6, 5, 0xE0D6C6], [7, 5, 0xE0D6C6], [8, 5, 0xE0D6C6], [9, 5, 0xE0D6C6], [10, 5, 0x958B80], [11, 5, 0x958B80], [0, 6, 0xE0D6C6], [1, 6, 0xE0D6C6], [2, 6, 0xE0D6C6], [3, 6, 0xE0D6C6], [4, 6, 0xE0D6C6], [5, 6, 0xE0D6C6], [6, 6, 0xE0D6C6], [7, 6, 0xE0D6C6], [8, 6, 0xE0D6C6], [9, 6, 0xE0D6C6], [10, 6, 0xE0D6C6], [11, 6, 0x958B80], [1, 7, 0x958B80], [2, 7, 0x958B80], [3, 7, 0x958B80], [4, 7, 0x958B80], [5, 7, 0x958B80], [6, 7, 0x958B80], [7, 7, 0x958B80], [8, 7, 0x958B80], [9, 7, 0x958B80], [10, 7, 0x958B80]]], "cloud": [12, 6, [[4, 0, 0xF6F0E6], [5, 0, 0xF6F0E6], [6, 0, 0xF6F0E6], [7, 0, 0xF6F0E6], [2, 1, 0xF6F0E6], [3, 1, 0xF6F0E6], [4, 1, 0xE0D6C6], [5, 1, 0xE0D6C6], [6, 1, 0xE0D6C6], [7, 1, 0xE0D6C6], [8, 1, 0xF6F0E6], [9, 1, 0xF6F0E6], [1, 2, 0xF6F0E6], [2, 2, 0xE0D6C6], [3, 2, 0xE0D6C6], [4, 2, 0xE0D6C6], [5, 2, 0xE0D6C6], [6, 2, 0xE0D6C6], [7, 2, 0xE0D6C6], [8, 2, 0xE0D6C6], [9, 2, 0xE0D6C6], [10, 2, 0x958B80], [0, 3, 0xF6F0E6], [1, 3, 0xE0D6C6], [2, 3, 0xE0D6C6], [3, 3, 0xE0D6C6], [4, 3, 0xE0D6C6], [5, 3, 0xE0D6C6], [6, 3, 0xE0D6C6], [7, 3, 0xE0D6C6], [8, 3, 0xE0D6C6], [9, 3, 0xE0D6C6], [10, 3, 0x958B80], [11, 3, 0x958B80], [0, 4, 0xE0D6C6], [1, 4, 0xE0D6C6], [2, 4, 0xE0D6C6], [3, 4, 0xE0D6C6], [4, 4, 0xE0D6C6], [5, 4, 0xE0D6C6], [6, 4, 0xE0D6C6], [7, 4, 0xE0D6C6], [8, 4, 0xE0D6C6], [9, 4, 0xE0D6C6], [10, 4, 0xE0D6C6], [11, 4, 0x958B80], [1, 5, 0x958B80], [2, 5, 0x958B80], [3, 5, 0x958B80], [4, 5, 0x958B80], [5, 5, 0x958B80], [6, 5, 0x958B80], [7, 5, 0x958B80], [8, 5, 0x958B80], [9, 5, 0x958B80], [10, 5, 0x958B80]]], "rain": [12, 10, [[4, 0, 0xC8C0B6], [5, 0, 0xC8C0B6], [6, 0, 0xC8C0B6], [7, 0, 0xC8C0B6], [2, 1, 0xC8C0B6], [3, 1, 0xC8C0B6], [4, 1, 0xA49C92], [5, 1, 0xA49C92], [6, 1, 0xA49C92], [7, 1, 0xA49C92], [8, 1, 0xC8C0B6], [9, 1, 0xC8C0B6], [1, 2, 0xC8C0B6], [2, 2, 0xA49C92], [3, 2, 0xA49C92], [4, 2, 0xA49C92], [5, 2, 0xA49C92], [6, 2, 0xA49C92], [7, 2, 0xA49C92], [8, 2, 0xA49C92], [9, 2, 0xA49C92], [10, 2, 0x6A645D], [0, 3, 0xC8C0B6], [1, 3, 0xA49C92], [2, 3, 0xA49C92], [3, 3, 0xA49C92], [4, 3, 0xA49C92], [5, 3, 0xA49C92], [6, 3, 0xA49C92], [7, 3, 0xA49C92], [8, 3, 0xA49C92], [9, 3, 0xA49C92], [10, 3, 0x6A645D], [11, 3, 0x6A645D], [0, 4, 0xA49C92], [1, 4, 0xA49C92], [2, 4, 0xA49C92], [3, 4, 0xA49C92], [4, 4, 0xA49C92], [5, 4, 0xA49C92], [6, 4, 0xA49C92], [7, 4, 0xA49C92], [8, 4, 0xA49C92], [9, 4, 0xA49C92], [10, 4, 0xA49C92], [11, 4, 0x6A645D], [1, 5, 0x6A645D], [2, 5, 0x6A645D], [3, 5, 0x6A645D], [4, 5, 0x6A645D], [5, 5, 0x6A645D], [6, 5, 0x6A645D], [7, 5, 0x6A645D], [8, 5, 0x6A645D], [9, 5, 0x6A645D], [10, 5, 0x6A645D], [2, 7, 0x8CC4F0], [6, 7, 0x8CC4F0], [10, 7, 0x8CC4F0], [1, 8, 0x8CC4F0], [2, 8, 0x3E6A94], [5, 8, 0x8CC4F0], [6, 8, 0x3E6A94], [9, 8, 0x8CC4F0], [10, 8, 0x3E6A94], [1, 9, 0x3E6A94], [5, 9, 0x3E6A94], [9, 9, 0x3E6A94]]], "snow": [12, 12, [[4, 0, 0xF6F0E6], [5, 0, 0xF6F0E6], [6, 0, 0xF6F0E6], [7, 0, 0xF6F0E6], [2, 1, 0xF6F0E6], [3, 1, 0xF6F0E6], [4, 1, 0xE0D6C6], [5, 1, 0xE0D6C6], [6, 1, 0xE0D6C6], [7, 1, 0xE0D6C6], [8, 1, 0xF6F0E6], [9, 1, 0xF6F0E6], [1, 2, 0xF6F0E6], [2, 2, 0xE0D6C6], [3, 2, 0xE0D6C6], [4, 2, 0xE0D6C6], [5, 2, 0xE0D6C6], [6, 2, 0xE0D6C6], [7, 2, 0xE0D6C6], [8, 2, 0xE0D6C6], [9, 2, 0xE0D6C6], [10, 2, 0x958B80], [0, 3, 0xF6F0E6], [1, 3, 0xE0D6C6], [2, 3, 0xE0D6C6], [3, 3, 0xE0D6C6], [4, 3, 0xE0D6C6], [5, 3, 0xE0D6C6], [6, 3, 0xE0D6C6], [7, 3, 0xE0D6C6], [8, 3, 0xE0D6C6], [9, 3, 0xE0D6C6], [10, 3, 0x958B80], [11, 3, 0x958B80], [0, 4, 0xE0D6C6], [1, 4, 0xE0D6C6], [2, 4, 0xE0D6C6], [3, 4, 0xE0D6C6], [4, 4, 0xE0D6C6], [5, 4, 0xE0D6C6], [6, 4, 0xE0D6C6], [7, 4, 0xE0D6C6], [8, 4, 0xE0D6C6], [9, 4, 0xE0D6C6], [10, 4, 0xE0D6C6], [11, 4, 0x958B80], [1, 5, 0x958B80], [2, 5, 0x958B80], [3, 5, 0x958B80], [4, 5, 0x958B80], [5, 5, 0x958B80], [6, 5, 0x958B80], [7, 5, 0x958B80], [8, 5, 0x958B80], [9, 5, 0x958B80], [10, 5, 0x958B80], [2, 7, 0xE0D6C6], [9, 7, 0xE0D6C6], [1, 8, 0xE0D6C6], [2, 8, 0xFFFFFF], [3, 8, 0xE0D6C6], [8, 8, 0xE0D6C6], [9, 8, 0xFFFFFF], [10, 8, 0xE0D6C6], [2, 9, 0xE0D6C6], [6, 9, 0xE0D6C6], [9, 9, 0xE0D6C6], [5, 10, 0xE0D6C6], [6, 10, 0xFFFFFF], [7, 10, 0xE0D6C6], [6, 11, 0xE0D6C6]]], "thunder": [12, 12, [[4, 0, 0xC8C0B6], [5, 0, 0xC8C0B6], [6, 0, 0xC8C0B6], [7, 0, 0xC8C0B6], [2, 1, 0xC8C0B6], [3, 1, 0xC8C0B6], [4, 1, 0xA49C92], [5, 1, 0xA49C92], [6, 1, 0xA49C92], [7, 1, 0xA49C92], [8, 1, 0xC8C0B6], [9, 1, 0xC8C0B6], [1, 2, 0xC8C0B6], [2, 2, 0xA49C92], [3, 2, 0xA49C92], [4, 2, 0xA49C92], [5, 2, 0xA49C92], [6, 2, 0xA49C92], [7, 2, 0xA49C92], [8, 2, 0xA49C92], [9, 2, 0xA49C92], [10, 2, 0x6A645D], [0, 3, 0xC8C0B6], [1, 3, 0xA49C92], [2, 3, 0xA49C92], [3, 3, 0xA49C92], [4, 3, 0xA49C92], [5, 3, 0xA49C92], [6, 3, 0xA49C92], [7, 3, 0xA49C92], [8, 3, 0xA49C92], [9, 3, 0xA49C92], [10, 3, 0x6A645D], [11, 3, 0x6A645D], [0, 4, 0xA49C92], [1, 4, 0xA49C92], [2, 4, 0xA49C92], [3, 4, 0xA49C92], [4, 4, 0xA49C92], [5, 4, 0xA49C92], [6, 4, 0xA49C92], [7, 4, 0xA49C92], [8, 4, 0xA49C92], [9, 4, 0xA49C92], [10, 4, 0xA49C92], [11, 4, 0x6A645D], [1, 5, 0x6A645D], [2, 5, 0x6A645D], [3, 5, 0x6A645D], [4, 5, 0x6A645D], [5, 5, 0x6A645D], [6, 5, 0x6A645D], [7, 5, 0xF6D86A], [8, 5, 0xF6D86A], [9, 5, 0x6A645D], [10, 5, 0x6A645D], [7, 6, 0xF6D86A], [8, 6, 0xF6D86A], [6, 7, 0xF6D86A], [7, 7, 0xF6D86A], [8, 7, 0xC08A30], [5, 8, 0xF6D86A], [6, 8, 0xF6D86A], [7, 8, 0xF6D86A], [8, 8, 0xF6D86A], [9, 8, 0xC08A30], [7, 9, 0xF6D86A], [8, 9, 0xC08A30], [6, 10, 0xF6D86A], [7, 10, 0xC08A30], [6, 11, 0xC08A30]]], "fog": [12, 7, [[0, 0, 0xB4ACA2], [1, 0, 0xB4ACA2], [2, 0, 0xB4ACA2], [3, 0, 0xB4ACA2], [4, 0, 0xB4ACA2], [5, 0, 0xB4ACA2], [6, 0, 0xB4ACA2], [7, 0, 0xB4ACA2], [8, 0, 0xB4ACA2], [9, 0, 0xB4ACA2], [2, 2, 0x6E6862], [3, 2, 0xB4ACA2], [4, 2, 0xB4ACA2], [5, 2, 0xB4ACA2], [6, 2, 0xB4ACA2], [7, 2, 0xB4ACA2], [8, 2, 0xB4ACA2], [9, 2, 0xB4ACA2], [10, 2, 0xB4ACA2], [11, 2, 0xB4ACA2], [0, 4, 0xB4ACA2], [1, 4, 0xB4ACA2], [2, 4, 0xB4ACA2], [3, 4, 0xB4ACA2], [4, 4, 0xB4ACA2], [5, 4, 0xB4ACA2], [6, 4, 0xB4ACA2], [7, 4, 0xB4ACA2], [8, 4, 0xB4ACA2], [9, 4, 0x6E6862], [2, 6, 0x6E6862], [3, 6, 0xB4ACA2], [4, 6, 0xB4ACA2], [5, 6, 0xB4ACA2], [6, 6, 0xB4ACA2], [7, 6, 0xB4ACA2], [8, 6, 0xB4ACA2], [9, 6, 0xB4ACA2]]], "alert": [9, 9, [[4, 0, 0xF6D86A], [3, 1, 0xF6D86A], [4, 1, 0xF6D86A], [5, 1, 0xC08A30], [3, 2, 0xF6D86A], [4, 2, 0x3A2E26], [5, 2, 0xF6D86A], [2, 3, 0xF6D86A], [3, 3, 0xF6D86A], [4, 3, 0x3A2E26], [5, 3, 0xF6D86A], [6, 3, 0xC08A30], [2, 4, 0xF6D86A], [3, 4, 0xF6D86A], [4, 4, 0x3A2E26], [5, 4, 0xF6D86A], [6, 4, 0xC08A30], [1, 5, 0xF6D86A], [2, 5, 0xF6D86A], [3, 5, 0xF6D86A], [4, 5, 0xF6D86A], [5, 5, 0xF6D86A], [6, 5, 0xF6D86A], [7, 5, 0xC08A30], [1, 6, 0xF6D86A], [2, 6, 0xF6D86A], [3, 6, 0xF6D86A], [4, 6, 0x3A2E26], [5, 6, 0xF6D86A], [6, 6, 0xF6D86A], [7, 6, 0xC08A30], [0, 7, 0xF6D86A], [1, 7, 0xF6D86A], [2, 7, 0xF6D86A], [3, 7, 0xF6D86A], [4, 7, 0xF6D86A], [5, 7, 0xF6D86A], [6, 7, 0xF6D86A], [7, 7, 0xF6D86A], [8, 7, 0xC08A30], [0, 8, 0xC08A30], [1, 8, 0xC08A30], [2, 8, 0xC08A30], [3, 8, 0xC08A30], [4, 8, 0xC08A30], [5, 8, 0xC08A30], [6, 8, 0xC08A30], [7, 8, 0xC08A30], [8, 8, 0xC08A30]]]}
 var CREAM = 0xE8DCCB
 var GREY = 0x9A948C
 var BLUE = 0x6FA8DC
@@ -59,34 +59,13 @@ class Clock
     return v >= 0 ? int(v + 0.5) : -int(-v + 0.5)
   end
 
-  def cloud(cx, cy, c)
-    var shade = ((c >> 1) & 0x7F7F7F) + ((c >> 3) & 0x1F1F1F)
-    var r = 0
-    for row : CLOUD
-      for i : 0 .. size(row) - 1
-        var ch = row[i]
-        if ch != "." pixel(cx - 6 + i, cy - 3 + r, ch == "L" ? c : shade) end
-      end
-      r += 1
+  def wicon(name, cx, cy)
+    var ic = WICONS[name]
+    var x0 = cx - ic[0] / 2
+    var y0 = cy - ic[1] / 2
+    for p : ic[2]
+      pixel(x0 + p[0], y0 + p[1], p[2])
     end
-  end
-
-  def sun(cx, cy, r)
-    circle_fill(cx, cy, r, AMBER)
-    var d = r + 2
-    pixel(cx, cy - d, AMBER)
-    pixel(cx, cy + d, AMBER)
-    pixel(cx - d, cy, AMBER)
-    pixel(cx + d, cy, AMBER)
-    pixel(cx - d + 1, cy - d + 1, AMBER)
-    pixel(cx + d - 1, cy - d + 1, AMBER)
-    pixel(cx - d + 1, cy + d - 1, AMBER)
-    pixel(cx + d - 1, cy + d - 1, AMBER)
-  end
-
-  def moon(cx, cy, r)
-    circle_fill(cx, cy, r, CREAM)
-    circle_fill(cx + 2, cy - 1, r - 1, 0)
   end
 
   def icon(cx, cy)
@@ -96,32 +75,15 @@ class Clock
       rect_fill(cx - 3, cy, 7, 1, GREY)
       return
     end
-    if code <= 1
-      if day self.sun(cx, cy, 3) else self.moon(cx, cy, 4) end
-    elif code == 2
-      if day self.sun(cx + 3, cy - 2, 2) else self.moon(cx + 3, cy - 2, 2) end
-      self.cloud(cx - 1, cy + 1, CREAM)
-    elif code == 3
-      self.cloud(cx, cy, CREAM)
-    elif code == 45 || code == 48
-      for i : 0 .. 2
-        rect_fill(cx - 5 + (i % 2), cy - 2 + i * 3, 10, 1, GREY)
-      end
-    elif (code >= 71 && code <= 77) || code == 85 || code == 86
-      self.cloud(cx, cy - 1, CREAM)
-      for i : 0 .. 2
-        pixel(cx - 3 + i * 3, cy + 4 + i % 2, CREAM)
-      end
-    elif code >= 95
-      self.cloud(cx, cy - 1, GREY)
-      line(cx + 1, cy + 3, cx - 1, cy + 5, AMBER)
-      line(cx - 1, cy + 5, cx + 1, cy + 5, AMBER)
-    else
-      self.cloud(cx, cy - 1, GREY)
-      for i : 0 .. 2
-        pixel(cx - 3 + i * 3, cy + 3 + (i * 2) % 3, BLUE)
-      end
+    var name = "rain"
+    if code <= 1 name = day ? "sun" : "moon"
+    elif code == 2 name = day ? "partly" : "moon"
+    elif code == 3 name = "cloud"
+    elif code == 45 || code == 48 name = "fog"
+    elif (code >= 71 && code <= 77) || code == 85 || code == 86 name = "snow"
+    elif code >= 95 name = "thunder"
     end
+    self.wicon(name, cx, cy)
   end
 
   def temp_text(cx, y, top)
@@ -189,7 +151,7 @@ class Clock
         font("large")
         self.temp_text(9, 11, 4)
       else
-        self.icon(9, left == "icon" ? 7 : 4)
+        self.icon(9, left == "icon" ? 8 : 5)
         if left == "both" self.temp_text(9, 15, 10) end
       end
       if store.get("mark", true) self.mark(15, 0, t) end
@@ -208,7 +170,7 @@ class Clock
   end
 
   def draw_weather(t)
-    self.icon(9, 5)
+    self.icon(9, 8)
     var v = shared.get("Sky.temp")
     var f = shared.get("Sky.feels")
     var wind = shared.get("Sky.wind")
@@ -222,8 +184,8 @@ class Clock
 
   def draw_alert(t)
     var col = shared.get("Sky.alert_color", CREAM)
-    self.mark(1, 2, 0)
-    text(8, 7, shared.get("Sky.alert_type", "alert"), col)
+    self.wicon("alert", 5, 5)
+    text(12, 7, shared.get("Sky.alert_type", "alert"), col)
     scroll_text(0, 15, width(), shared.get("Sky.alert", ""), col)
   end
 

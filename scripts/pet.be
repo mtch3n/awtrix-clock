@@ -501,36 +501,60 @@ class Pet
     self.moving = true
   end
 
+  def tint(c, k)
+    var r = min(((c >> 16) & 255) * k / 100, 255)
+    var g = min(((c >> 8) & 255) * k / 100, 255)
+    var b = min((c & 255) * k / 100, 255)
+    return (r << 16) | (g << 8) | b
+  end
+
+  def run(x, y, a, b, r, c, flip)
+    if b < a return end
+    rect_fill(flip ? x + 17 - b : x + a, flip ? y + 9 - r : y + r, b - a + 1, 1, c)
+  end
+
   def sprite(x, y, c, t, eyes_closed, wave)
-    var r = 0
     var flip = self.hide == "top" || self.flip_now
     var blink = (t % 4200) < 150
+    var lc = self.tint(c, 122)
+    var sc = self.tint(c, 76)
+    var dc = self.tint(c, 56)
+    var r = 0
     for spans : BODY
-      var ry = flip ? y + 9 - r : y + r
-      if r == 2 || r == 3
-        rect_fill(x + 3, ry, 12, 1, c)
-        if !blink && (!eyes_closed || r == 3)
-          pixel(x + 5 + self.look, ry, 0)
-          pixel(x + 12 + self.look, ry, 0)
-        end
-        r += 1
-        continue
-      end
       for s : spans
         var a = s[0]
         var b = s[1]
-        if wave && !flip && (r == 4 || r == 5) b = 14 end
-        rect_fill(flip ? x + 17 - b : x + a, ry, b - a + 1, 1, c)
+        if wave && !flip && (r == 4 || r == 5) b = min(b, 14) end
+        self.run(x, y, a, b, r, c, flip)
       end
       r += 1
     end
+    self.run(x, y, 3, 12, 0, lc, flip)
+    for rr : 1 .. 3 self.run(x, y, 3, 3, rr, lc, flip) end
+    self.run(x, y, 3, 14, 7, sc, flip)
+    for rr : 0 .. 3 self.run(x, y, 13, 14, rr, sc, flip) end
+    self.run(x, y, 13, 14, 6, sc, flip)
+    self.run(x, y, 1, 2, 5, sc, flip)
+    if !(wave && !flip) self.run(x, y, 15, 16, 5, sc, flip) end
+    for rr : 2 .. 3
+      var ry = flip ? y + 9 - rr : y + rr
+      if !blink && (!eyes_closed || rr == 3)
+        var e1 = 5 + self.look
+        var e2 = 12 + self.look
+        pixel(flip ? x + 17 - e1 : x + e1, ry, 0)
+        pixel(flip ? x + 17 - e2 : x + e2, ry, 0)
+      end
+    end
     if wave && !flip
       var up = (t / 400) % 2 == 0 ? 0 : 1
-      rect_fill(x + 15, y + 2 + up, 2, 2, c)
+      rect_fill(x + 15, y + 2 + up, 1, 2, lc)
+      rect_fill(x + 16, y + 2 + up, 1, 2, c)
     end
     var legs = self.moving && (t / 260) % 2 == 1 ? LEGS_B : LEGS_A
     for lx : legs
-      rect_fill(flip ? x + 17 - lx : x + lx, flip ? y : y + 8, 1, 2, c)
+      var lx2 = flip ? x + 17 - lx : x + lx
+      pixel(lx2, flip ? y + 1 : y + 8, sc)
+      pixel(lx2, flip ? y : y + 9, dc)
     end
   end
 
