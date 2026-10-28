@@ -33,11 +33,11 @@ class Sky
     self.wx_ticks -= 1
     self.alert_ticks -= 1
     if self.wx_ticks <= 0
-      self.wx_ticks = 600
+      self.wx_ticks = shared.get("Calm.eco", false) ? 1800 : 600
       self.fetch_weather()
     end
     if self.alert_ticks <= 0
-      self.alert_ticks = 300
+      self.alert_ticks = shared.get("Calm.eco", false) ? 900 : 300
       if store.get("alerts", true) self.fetch_alerts() end
     end
   end

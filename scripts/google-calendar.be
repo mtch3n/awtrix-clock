@@ -97,7 +97,7 @@ class GoogleCalendar
       return
     end
     if !self.fetched || self.ticks <= 0
-      self.ticks = store.get("every", 5) * 60
+      self.ticks = shared.get("Calm.eco", false) ? 900 : store.get("every", 5) * 60
       self.fetch()
     end
     self.ticks -= 1

@@ -97,6 +97,10 @@ class Device
     var usb = shared.get("Calm.usb", false)
     self.battery_icon(1, 4, pct, usb, t)
     self.big(str(pct), "%", pct >= 20 ? CREAM : RED)
+    var left = shared.get("Calm.left_h")
+    if !usb && left != nil
+      text(18, 15, left >= 1 ? format("~%dh", int(left)) : format("~%dm", int(left * 60)), SHADE)
+    end
   end
 
   def draw_uptime()

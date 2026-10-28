@@ -78,7 +78,7 @@ class Calm
     self.ticks += 1
     self.power_mode()
     if self.auth == nil return end
-    if self.ticks % 3 == 0 self.poll() end
+    if self.ticks % (shared.get("eco", false) ? 10 : 3) == 0 self.poll() end
     if self.ticks % 5 == 0 self.indicators() end
     if self.ticks % 30 == 0 && store.get("wover", false) self.weather_overlay() end
   end
@@ -127,6 +127,8 @@ class Calm
     end
     self.pct = pct
     self.usb = usb
+    shared.set("eco", !usb && store.get("bsave", true))
+    self.battery_log(pct, usb)
     shared.set("battery", pct)
     shared.set("usb", usb)
     shared.set("volts", d.find("batteryVoltage"))
@@ -134,6 +136,24 @@ class Calm
     shared.set("heap", d.find("freeHeapBytes"))
     shared.set("version", d.find("version"))
     shared.set("reset", d.find("resetReason"))
+  end
+
+  def battery_log(pct, usb)
+    var now = int(epoch_ms() / 1000)
+    var logv = store.get("blog", [])
+    if usb
+      if size(logv) > 0 store.set("blog", []) end
+      shared.set("left_h", nil)
+      return
+    end
+    if size(logv) > 0 && now - logv[-1][0] < 600 return end
+    logv.push([now, pct])
+    while size(logv) > 18 logv.remove(0) end
+    store.set("blog", logv)
+    var first = logv[0]
+    var hours = (now - first[0]) / 3600.0
+    var drop = first[1] - pct
+    shared.set("left_h", hours >= 0.3 && drop > 0 ? pct * hours / drop : nil)
   end
 
   def poll()

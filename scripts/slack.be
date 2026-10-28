@@ -118,7 +118,7 @@ class Slack
 
   def next()
     self.busy = false
-    self.wait = 1
+    self.wait = shared.get("Calm.eco", false) ? 20 : 1
     self.idx += 1
     if self.idx >= size(self.ids)
       self.idx = 0

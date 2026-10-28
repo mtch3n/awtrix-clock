@@ -34,7 +34,7 @@ class Gmail
   def loop()
     if oauth.ready()
       if self.ticks <= 0
-        self.ticks = store.get("every", 2) * 60
+        self.ticks = shared.get("Calm.eco", false) ? 900 : store.get("every", 2) * 60
         oauth.get(API + "labels/INBOX", / b, st -> self.on_label(b, st))
       end
       self.ticks -= 1

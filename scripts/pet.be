@@ -161,7 +161,7 @@ class Pet
   def check_visit(night)
     var every = store.get("visit", 20)
     var now = int(epoch_ms() / 1000)
-    if night || every <= 0 || self.news != nil || self.mood != "idle" || hour() < 0 return end
+    if night || every <= 0 || shared.get("Calm.eco", false) || self.news != nil || self.mood != "idle" || hour() < 0 return end
     if now - self.last_visit < every * 60 return end
     self.last_visit = now
     store.set("last_visit", now)
