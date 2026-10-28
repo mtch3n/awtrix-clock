@@ -24,6 +24,7 @@ import blockfont
 var DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 var AMBER = 0xE0A040
+var CLOUD = ["....LLLL....", "..LLLLLLLL..", ".LLLLLLLLLS.", "LLLLLLLLLLSS", "LLLLLLLLLLLS", ".SSSSSSSSSS."]
 var CREAM = 0xE8DCCB
 var GREY = 0x9A948C
 var BLUE = 0x6FA8DC
@@ -59,10 +60,15 @@ class Clock
   end
 
   def cloud(cx, cy, c)
-    circle_fill(cx - 3, cy + 1, 2, c)
-    circle_fill(cx + 1, cy - 1, 3, c)
-    circle_fill(cx + 4, cy + 1, 2, c)
-    rect_fill(cx - 5, cy + 1, 11, 3, c)
+    var shade = ((c >> 1) & 0x7F7F7F) + ((c >> 3) & 0x1F1F1F)
+    var r = 0
+    for row : CLOUD
+      for i : 0 .. size(row) - 1
+        var ch = row[i]
+        if ch != "." pixel(cx - 6 + i, cy - 3 + r, ch == "L" ? c : shade) end
+      end
+      r += 1
+    end
   end
 
   def sun(cx, cy, r)

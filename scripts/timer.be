@@ -7,6 +7,7 @@
 # @config  work   number "Focus" default=25 min=5 max=90 unit=min group="Pomodoro"
 # @config  short  number "Short break" default=5 min=1 max=30 unit=min group="Pomodoro"
 # @config  long   number "Long break" default=15 min=5 max=60 unit=min group="Pomodoro"
+# @config  focus  select "Focus icon" default=tomato options=tomato,target,flame,bulb,sprout group="Pomodoro"
 # @config  rounds number "Rounds before a long break" default=4 min=2 max=8 group="Pomodoro"
 # @config  auto   bool   "Start the next phase by itself" default=false group="Pomodoro"
 # @config  tune   select "Ring tune" default=bells options=bells,chime,pips group="Sound"
@@ -28,7 +29,10 @@ var CREAM = 0xE8DCCB
 var BROWN = 0x8C7B6B
 var DARK = 0x3A2E26
 var AMBER = 0xE0A040
-var HAND = [[0, -3], [2, -2], [3, 0], [2, 2], [0, 3], [-2, 2], [-3, 0], [-2, -2]]
+var DIAL = [[0, -5, 0, 100], [0, -4, 0, 100], [0, -3, 0, 100], [0, -2, 0, 100], [0, -1, 0, 100], [0, 0, 0, 100], [1, -5, 11, 89], [1, -4, 14, 100], [1, -3, 18, 100], [2, -5, 21, 60], [2, -4, 26, 100], [1, -2, 26, 100], [2, -3, 33, 100], [3, -4, 36, 100], [4, -4, 45, 22], [3, -3, 45, 100], [2, -2, 45, 100], [1, -1, 45, 100], [4, -3, 53, 100], [3, -2, 56, 100], [4, -2, 63, 100], [2, -1, 63, 100], [5, -2, 68, 60], [3, -1, 71, 100], [4, -1, 75, 100], [5, -1, 78, 89], [1, 0, 90, 100], [2, 0, 90, 100], [3, 0, 90, 100], [4, 0, 90, 100], [5, 0, 90, 100], [5, 1, 101, 89], [4, 1, 104, 100], [3, 1, 108, 100], [5, 2, 111, 60], [2, 1, 116, 100], [4, 2, 116, 100], [3, 2, 123, 100], [4, 3, 126, 100], [1, 1, 135, 100], [2, 2, 135, 100], [3, 3, 135, 100], [4, 4, 135, 22], [3, 4, 143, 100], [2, 3, 146, 100], [1, 2, 153, 100], [2, 4, 153, 100], [2, 5, 158, 60], [1, 3, 161, 100], [1, 4, 165, 100], [1, 5, 168, 89], [0, 1, 180, 100], [0, 2, 180, 100], [0, 3, 180, 100], [0, 4, 180, 100], [0, 5, 180, 100], [-1, 5, 191, 89], [-1, 4, 194, 100], [-1, 3, 198, 100], [-2, 5, 201, 60], [-1, 2, 206, 100], [-2, 4, 206, 100], [-2, 3, 213, 100], [-3, 4, 216, 100], [-1, 1, 225, 100], [-2, 2, 225, 100], [-3, 3, 225, 100], [-4, 4, 225, 22], [-4, 3, 233, 100], [-3, 2, 236, 100], [-2, 1, 243, 100], [-4, 2, 243, 100], [-5, 2, 248, 60], [-3, 1, 251, 100], [-4, 1, 255, 100], [-5, 1, 258, 89], [-5, 0, 270, 100], [-4, 0, 270, 100], [-3, 0, 270, 100], [-2, 0, 270, 100], [-1, 0, 270, 100], [-5, -1, 281, 89], [-4, -1, 284, 100], [-3, -1, 288, 100], [-5, -2, 291, 60], [-4, -2, 296, 100], [-2, -1, 296, 100], [-3, -2, 303, 100], [-4, -3, 306, 100], [-4, -4, 315, 22], [-3, -3, 315, 100], [-2, -2, 315, 100], [-1, -1, 315, 100], [-3, -4, 323, 100], [-2, -3, 326, 100], [-2, -4, 333, 100], [-1, -2, 333, 100], [-2, -5, 338, 60], [-1, -3, 341, 100], [-1, -4, 345, 100], [-1, -5, 348, 89]]
+var TOMATO = [[-2, -5, 0x905143], [-1, -5, 0xD77A64], [0, -5, 0xF08870], [1, -5, 0xBB4835], [2, -5, 0x7C3024], [-4, -4, 0x351E19], [-3, -4, 0xF08870], [-2, -4, 0xF08870], [-1, -4, 0xF08870], [0, -4, 0xD0503C], [1, -4, 0xD0503C], [2, -4, 0xD0503C], [3, -4, 0xD0503C], [4, -4, 0x2E120D], [-4, -3, 0xF08870], [-3, -3, 0xF08870], [-2, -3, 0xF08870], [-1, -3, 0xD0503C], [0, -3, 0xD0503C], [1, -3, 0xD0503C], [2, -3, 0xD0503C], [3, -3, 0xD0503C], [4, -3, 0xD0503C], [-5, -2, 0x905143], [-4, -2, 0xF08870], [-3, -2, 0xF08870], [-2, -2, 0xD0503C], [-1, -2, 0xD0503C], [0, -2, 0xD0503C], [1, -2, 0xD0503C], [2, -2, 0xD0503C], [3, -2, 0xD0503C], [4, -2, 0xD0503C], [5, -2, 0x7C3024], [-5, -1, 0xD77A64], [-4, -1, 0xF08870], [-3, -1, 0xD0503C], [-2, -1, 0xD0503C], [-1, -1, 0xD0503C], [0, -1, 0xD0503C], [1, -1, 0xD0503C], [2, -1, 0xD0503C], [3, -1, 0xD0503C], [4, -1, 0xD0503C], [5, -1, 0xBB4835], [-5, 0, 0xF08870], [-4, 0, 0xD0503C], [-3, 0, 0xD0503C], [-2, 0, 0xD0503C], [-1, 0, 0xD0503C], [0, 0, 0xD0503C], [1, 0, 0xD0503C], [2, 0, 0xD0503C], [3, 0, 0xD0503C], [4, 0, 0xD0503C], [5, 0, 0x9A3424], [-5, 1, 0xBB4835], [-4, 1, 0xD0503C], [-3, 1, 0xD0503C], [-2, 1, 0xD0503C], [-1, 1, 0xD0503C], [0, 1, 0xD0503C], [1, 1, 0xD0503C], [2, 1, 0xD0503C], [3, 1, 0xD0503C], [4, 1, 0x9A3424], [5, 1, 0x8A2E20], [-5, 2, 0x7C3024], [-4, 2, 0xD0503C], [-3, 2, 0xD0503C], [-2, 2, 0xD0503C], [-1, 2, 0xD0503C], [0, 2, 0xD0503C], [1, 2, 0xD0503C], [2, 2, 0xD0503C], [3, 2, 0x9A3424], [4, 2, 0x9A3424], [5, 2, 0x5C1F15], [-4, 3, 0xD0503C], [-3, 3, 0xD0503C], [-2, 3, 0xD0503C], [-1, 3, 0xD0503C], [0, 3, 0xD0503C], [1, 3, 0xD0503C], [2, 3, 0x9A3424], [3, 3, 0x9A3424], [4, 3, 0x9A3424], [-4, 4, 0x2E120D], [-3, 4, 0xD0503C], [-2, 4, 0xD0503C], [-1, 4, 0xD0503C], [0, 4, 0xD0503C], [1, 4, 0x9A3424], [2, 4, 0x9A3424], [3, 4, 0x9A3424], [4, 4, 0x220B08], [-2, 5, 0x7C3024], [-1, 5, 0xBB4835], [0, 5, 0x9A3424], [1, 5, 0x8A2E20], [2, 5, 0x5C1F15]]
+var FOCUS = {"target": [["...rrrrr...", ".rr.....rr.", ".r..ccc..r.", "r..c...c..r", "r.c..r..c.r", "r.c.rrr.c.r", "r.c..r..c.r", "r..c...c..r", ".r..ccc..r.", ".rr.....rr.", "...rrrrr...", "..........."], ["...rrrrr...", ".rr.....rr.", ".r..ccc..r.", "r..c...c..r", "r.c.....c.r", "r.c..r..c.r", "r.c.....c.r"]], "flame": [[".....o.....", "....oo.....", "....ooo....", "...oooo.o..", "...ooooooo.", "..oooaaooo.", "..ooaaaaoo.", ".oooayyaooo", ".ooayyyyaoo", ".ooayyyyaoo", "..ooayyaoo.", "...oooooo.."], ["......o....", ".....oo....", "....ooo.o.."]], "bulb": [["...yyyyy...", "..yyyyyyy..", ".yyyyyyyyy.", ".yyyyaayyy.", ".yyyaayyyy.", ".yyyyaayyy.", "..yyyyyyy..", "...yyyyy...", "...ccccc...", "...bbbbb...", "...ccccc...", "....bbb...."], ["...yyyyy...", "..yyyyyyy..", ".yyyyyyyyy.", ".yyyyyyyyy.", ".yyyyyyyyy.", ".yyyyyyyyy."]], "sprout": [["...........", "..gg...gg..", ".gggg.gggg.", ".ggggGgggg.", "..ggGGGgg..", ".....G.....", ".....G.....", ".....G.....", ".ooooooooo.", "..ooooooo..", "..ooooooo..", "...ooooo..."], ["...........", "...gg...gg.", "..gggg.gggg", "..ggggGgggg", "...ggGGGgg."]]}
+var PAL = {"g": 0x6FAF6A, "G": 0x3F7F3A, "r": 0xD0503C, "h": 0xF08870, "d": 0x9A3424, "c": 0xE8DCCB, "a": 0xE0A040, "o": 0xE07030, "y": 0xF0D070, "b": 0x8C7B6B}
 
 class Timer
   var mode, set_s, end_ms, left_ms, started_ms, elapsed_ms, ringing, ring_until, last_tone, phase, round, field
@@ -209,14 +213,44 @@ class Timer
     if running && left > 0 pixel(x + 4, m + (t / 150) % 3, AMBER) end
   end
 
-  def tomato(x, y, h, t, running)
-    var r = (h - 2) / 2
-    var cy = y + h - 1 - r
-    circle_fill(x + 4, cy, r, RED)
-    var sway = running ? ((t / 500) % 2) : 0
-    pixel(x + 4, y, GREEN)
-    rect_fill(x + 2 + sway, y + 1, 5 - sway, 1, GREEN)
-    if running && sway == 1 pixel(x + 7, y, GREEN) end
+  def bitmap(rows, x, y)
+    var r = 0
+    for row : rows
+      for i : 0 .. size(row) - 1
+        var ch = row[i]
+        if ch != "." pixel(x + i, y + r, PAL[ch]) end
+      end
+      r += 1
+    end
+  end
+
+  def scaled(c, k)
+    return ((((c >> 16) & 255) * k / 100) << 16) | ((((c >> 8) & 255) * k / 100) << 8) | ((c & 255) * k / 100)
+  end
+
+  def focus_icon(x, y, h, t, running)
+    var name = store.get("focus", "tomato")
+    var top = y + (h - 12) / 2
+    if name == "tomato"
+      for cell : TOMATO
+        pixel(x + 5 + cell[0], top + 6 + cell[1], cell[2])
+      end
+      var sway = running && (t / 500) % 2 == 1 ? 1 : 0
+      pixel(x + 5 + sway, top, 0x6FAF6A)
+      rect_fill(x + 3 + sway, top + 1, 5, 1, 0x6FAF6A)
+      pixel(x + 5, top + 1, 0x3F7F3A)
+      return
+    end
+    var pair = FOCUS.find(name, FOCUS["target"])
+    self.bitmap(pair[0], x, top)
+    if running && (t / 500) % 2 == 1
+      var r = 0
+      for row : pair[1]
+        rect_fill(x, top + r, 11, 1, 0)
+        r += 1
+      end
+      self.bitmap(pair[1], x, top)
+    end
   end
 
   def cup(x, y, h, t, running)
@@ -235,13 +269,13 @@ class Timer
   end
 
   def stopwatch(x, y, h, c, ms)
-    var r = (h - 3) / 2
-    var cy = y + h - 1 - r
-    circle(x + 4, cy, r, c)
-    rect_fill(x + 3, y, 3, 1, c)
-    rect_fill(x + 4, y + 1, 1, cy - r - y - 1, c)
-    var hand = HAND[(ms / 7500) % size(HAND)]
-    line(x + 4, cy, x + 4 + hand[0], cy + hand[1], AMBER)
+    var top = y + (h - 12) / 2
+    rect_fill(x + 4, top, 3, 1, c)
+    var deg = ms > 0 ? (ms % 60000) * 360 / 60000 : -1
+    for cell : DIAL
+      var col = cell[2] <= deg ? AMBER : DARK
+      pixel(x + 5 + cell[0], top + 6 + cell[1], self.scaled(col, cell[3]))
+    end
   end
 
   def draw()
@@ -256,7 +290,7 @@ class Timer
     if self.mode == "stopwatch"
       var s = self.elapsed() / 1000
       label = s >= 6000 ? format("%d:%02d", s / 3600, s % 3600 / 60) : format("%02d:%02d", s / 60, s % 60)
-      if !hide_icon self.stopwatch(3, dy, dh, CREAM, self.elapsed()) end
+      if !hide_icon self.stopwatch(2, dy, dh, CREAM, self.elapsed()) end
     else
       var secs = (self.remaining() + 999) / 1000
       label = secs >= 6000 ? format("%d:%02d", secs / 3600, secs % 3600 / 60) : format("%02d:%02d", secs / 60, secs % 60)
@@ -268,7 +302,7 @@ class Timer
           label = format("%02d:00", secs / 60)
         end
         if hide_icon
-        elif self.phase == "work" && !edit_brk self.tomato(3, dy, dh, t, self.running())
+        elif self.phase == "work" && !edit_brk self.focus_icon(2, dy, dh, t, self.running())
         else self.cup(3, dy, dh, t, self.running())
         end
         var n = store.get("rounds", 4)
