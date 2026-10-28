@@ -14,6 +14,8 @@
 # @config  overlay bool   "Weather overlay" default=false help="Rain, snow, thunder and more on the clock face" group="Extras"
 # @config  mark    bool   "Alert mark" default=true help="A small triangle while Environment Canada has an alert" group="Extras"
 # @config  pagesec number "Pages stay" default=8 min=3 max=60 unit=s help="After a knob turn, then back to the time" group="Extras"
+# @config  retro   select "Retro" default=off options=off,nixie,vfd,crt help="nixie: orange glow. vfd: cyan glow and ghost segments. crt: amber glow and scan lines" group="Retro"
+# @config  glow    slider "Glow" default=25 min=0 max=60 unit=% group="Retro"
 # @config  color   color  "Digits" default=#F2D7B6 group="Colors"
 # @config  temp    color  "Temperature" default=#E8DCCB group="Colors"
 # @config  today   color  "Today" default=#C8643C group="Colors"
@@ -132,6 +134,39 @@ class Clock
     return [st[0], h, gap, st[1], st[2]]
   end
 
+  def dimmed(c, k)
+    return ((((c >> 16) & 255) * k / 100) << 16) | ((((c >> 8) & 255) * k / 100) << 8) | ((c & 255) * k / 100)
+  end
+
+  def retro_text(s, x, y, c, colon, dm)
+    var mode = store.get("retro", "off")
+    if mode == "off"
+      blockfont.text(s, x, y, c, dm[3], dm[4], colon, dm[0], dm[1], dm[2])
+      return
+    end
+    var col = mode == "nixie" ? 0xFF7A2A : (mode == "vfd" ? 0x5CF0D0 : 0xFFB030)
+    var g = store.get("glow", 25)
+    if mode == "vfd"
+      var ghost = ""
+      for i : 0 .. size(s) - 1 ghost += s[i] == ":" || s[i] == " " ? s[i] : "8" end
+      blockfont.text(ghost, x, y, self.dimmed(col, 7), dm[3], dm[4], true, dm[0], dm[1], dm[2])
+    end
+    if g > 0
+      for d : [[-1, 0], [1, 0], [0, -1], [0, 1]]
+        blockfont.text(s, x + d[0], y + d[1], self.dimmed(col, g), dm[3], dm[4], colon, dm[0], dm[1], dm[2])
+      end
+    end
+    if mode == "crt"
+      blockfont.parity = 1
+      blockfont.text(s, x, y, self.dimmed(col, 70), dm[3], dm[4], colon, dm[0], dm[1], dm[2])
+      blockfont.parity = 0
+      blockfont.text(s, x, y, col, dm[3], dm[4], colon, dm[0], dm[1], dm[2])
+      blockfont.parity = -1
+    else
+      blockfont.text(s, x, y, col, dm[3], dm[4], colon, dm[0], dm[1], dm[2])
+    end
+  end
+
   def draw_time(t)
     var layout = store.get("layout", "weather")
     var dm = self.dims()
@@ -142,7 +177,7 @@ class Clock
     var w = blockfont.width(str_t, dm[0], dm[2])
     var x = layout == "weather" ? width() - w - 2 : (width() - w) / 2
     var y = (16 - dm[1]) / 2
-    blockfont.text(str_t, x, y, c, dm[3], dm[4], colon, dm[0], dm[1], dm[2])
+    self.retro_text(str_t, x, y, c, colon, dm)
     if store.get("bar", true) self.weekday_bar(x, w) end
     if store.get("secbar", false) rect_fill(x, 0, second() * w / 59, 1, store.get("sec", 0x8C7B6B)) end
     if layout == "weather"
