@@ -5,7 +5,7 @@
 # @config  home    text   "Clock app"     default="Time" group="Return"
 # @config  keep    text   "Never leave"   default="Pomodoro-Timer,Timer" help="Apps that stay, separated by commas" group="Return"
 # @config  quiet   bool   "Quiet time" default=true help="Display off and all apps paused" group="Quiet time"
-# @config  qfrom   text   "Quiet from"    default="00:00" group="Quiet time"
+# @config  qfrom   text   "Quiet from"    default="21:00" group="Quiet time"
 # @config  qto     text   "Quiet until"   default="06:00" group="Quiet time"
 # @config  qwake   number "Wake on a button for" default=3 min=1 max=30 unit=min help="A button push (LEFT or RIGHT) wakes the clock for this long" group="Quiet time"
 # @config  night   bool   "Night mode"    default=true group="Night"
@@ -98,7 +98,7 @@ class Calm
   end
 
   def in_quiet()
-    if !store.get("quiet", true) || !self.in_window(store.get("qfrom", "00:00"), store.get("qto", "06:00")) return false end
+    if !store.get("quiet", true) || !self.in_window(store.get("qfrom", "21:00"), store.get("qto", "06:00")) return false end
     return now_ms() > self.wake_until
   end
 
@@ -196,7 +196,7 @@ class Calm
     self.battery(d)
     var cur = d.find("currentApp", "")
     if cur != self.app
-      if self.app != "" && store.get("quiet", true) && self.in_window(store.get("qfrom", "00:00"), store.get("qto", "06:00")) self.wake() end
+      if self.app != "" && store.get("quiet", true) && self.in_window(store.get("qfrom", "21:00"), store.get("qto", "06:00")) self.wake() end
       self.app = cur
       self.since = now_ms()
       return
