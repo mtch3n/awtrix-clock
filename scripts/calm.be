@@ -21,10 +21,11 @@
 # @config  boff    number "Display off below" default=10 min=0 max=100 unit=% group="Battery"
 # @config  wover   bool   "Weather overlay on all apps" default=false help="Sets the display overlay from the weather (rain, snow, thunder...). Off: the overlay setting stays as you set it" group="Weather"
 # @config  inds    bool   "Indicators"    default=true help="Mail, Slack and alerts (internet, Claude, weather) in the corners" group="Indicators"
-# @config  user    text   "Web login user" default="admin" group="Web login"
-# @config  pass    text   "Web login password" default="" help="Needed for the return and the indicators" group="Web login"
+# @needs   secret
+# @secret  auth label="Web login (Basic)" help="base64 of user:password, e.g. printf admin:pw | base64" hosts=127.0.0.1
 import json
 import string
+import secret
 
 def trim(s)
   var a = 0
@@ -38,24 +39,6 @@ def hhmm(s)
   var p = string.split(s, ":")
   if size(p) != 2 return -1 end
   return int(trim(p[0])) * 60 + int(trim(p[1]))
-end
-
-def b64(s)
-  var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-  var out = ""
-  var i = 0
-  var n = size(s)
-  while i < n
-    var b0 = string.byte(s[i])
-    var b1 = i + 1 < n ? string.byte(s[i + 1]) : 0
-    var b2 = i + 2 < n ? string.byte(s[i + 2]) : 0
-    out += chars[b0 >> 2]
-    out += chars[((b0 & 3) << 4) | (b1 >> 4)]
-    out += i + 1 < n ? chars[((b1 & 15) << 2) | (b2 >> 6)] : "="
-    out += i + 2 < n ? chars[b2 & 63] : "="
-    i += 3
-  end
-  return out
 end
 
 class Calm
@@ -73,8 +56,7 @@ class Calm
   end
 
   def setup()
-    var pass = store.get("pass", "")
-    if pass != "" self.auth = "Basic " + b64(store.get("user", "admin") + ":" + pass) end
+    self.auth = secret.has('auth') ? "Basic {secret:auth}" : nil
   end
 
   def headers()
@@ -83,6 +65,7 @@ class Calm
 
   def loop()
     self.ticks += 1
+    if self.auth == nil && secret.has('auth') self.auth = "Basic {secret:auth}" end
     self.power_mode()
     if self.auth == nil return end
     if self.ticks % (shared.get("eco", false) && !shared.get("quiet", false) ? 10 : 3) == 0 self.poll() end

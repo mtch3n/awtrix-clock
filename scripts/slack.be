@@ -3,11 +3,13 @@
 # @author  mtch3n
 # @version 1.0
 # @display 52x16
-# @config  token  text   "User OAuth Token" default="" help="xoxp-... from api.slack.com/apps > OAuth & Permissions"
+# @needs   secret
+# @secret  token label="User OAuth Token" help="xoxp-... from api.slack.com/apps > OAuth & Permissions" hosts=slack.com
 # @config  hide   bool   "Hide when nothing is unread" default=true
 # @config  bots   bool   "Count bot and app DMs" default=false
 # @config  days   number "Count messages from the last" default=7 min=1 max=365 unit=days
 import json
+import secret
 
 var API = "https://slack.com/api/"
 var LIST_EVERY = 1800
@@ -43,7 +45,7 @@ class Slack
   end
 
   def opts()
-    return {'headers': {'Authorization': "Bearer " + store.get("token", "")}, 'cap': 131072}
+    return {'headers': {'Authorization': "Bearer {secret:token}"}, 'cap': 131072}
   end
 
   def ok(body, status)
@@ -62,7 +64,7 @@ class Slack
 
   def loop()
     self.update_labels()
-    if store.get("token", "") == "" || self.busy || shared.get("Calm.quiet", false) return end
+    if !secret.has('token') || self.busy || shared.get("Calm.quiet", false) return end
     if self.wait > 0
       self.wait -= 1
       return
@@ -332,9 +334,9 @@ class Slack
   end
 
   def update_labels()
-    if store.get("token", "") == ""
+    if !secret.has('token')
       self.top = "SLACK"
-      self.bottom = "Add the token: Apps > gear"
+      self.bottom = "Add the token: Apps > gear > API keys"
     elif self.status != 0 && self.status != 200 && self.status != 429
       self.top = "SLACK"
       self.bottom = "Slack answered " + str(self.status)

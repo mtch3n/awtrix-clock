@@ -86,8 +86,7 @@
     "bwarn": 20,
     "boff": 10,
     "wover": true,
-    "inds": true,
-    "user": "admin"
+    "inds": true
   },
   "Sky": {
     "lat": 43.6532,

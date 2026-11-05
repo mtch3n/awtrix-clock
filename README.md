@@ -1,6 +1,6 @@
 # awtrix-clock
 
-Scripts and settings for an Ulanzi TC002 (52×16) that runs [AWTRIX NG](https://github.com/Blueforcer/awtrix-ng).
+Scripts and settings for an Ulanzi TC002 (52×16) that runs [AWTRIX NG](https://github.com/Blueforcer/awtrix-ng) 1.2.3 or newer.
 The look is calm: the clock goes back to the time by itself, the display dims at night, and one warm
 palette ("Warm paper") is used for all apps. A small Clawd-style pet brings the news.
 
@@ -40,12 +40,16 @@ Slack share the newest message, Calm shares the night state, and the pet and Cal
     ```
 
 3. In the web UI, under **Apps → ⚙**:
-    - **Calm**: enter the web login password.
+    - **Calm → API keys**: enter the web login as a Basic value, `printf 'admin:yourpassword' | base64`.
+      It is used only for requests to `127.0.0.1`.
     - **Google-Calendar** and **Gmail**: enter the client ID and secret of a Google OAuth client
       (type "Web application", redirect URI `https://awtrix.de/oauth/callback`), then sign in. Use
       the scopes `calendar.readonly` and `gmail.metadata`.
-    - **Slack**: create a Slack app from `slack-manifest.yaml`, install it and paste the User OAuth
-      Token (`xoxp-…`).
+    - **Slack → API keys**: create a Slack app from `slack-manifest.yaml`, install it and paste the
+      User OAuth Token (`xoxp-…`). It is used only for requests to `slack.com`.
+
+Calm and Slack keep their keys with `@secret` (AWTRIX NG 1.2.3 or newer): the scripts never see
+them, and no API route returns them.
 
 The sign-ins and tokens are stored on the clock without encryption. Keep the web login on.
 
